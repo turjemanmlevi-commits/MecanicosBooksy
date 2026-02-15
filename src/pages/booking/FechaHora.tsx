@@ -94,26 +94,32 @@ export default function FechaHora() {
 
         const slotEnd = addMinutes(slot, slotDuration);
 
+        // Ensure we always have at least one slot available if no techs are defined
+        // or if data is still loading
+        const activeTechCount = techCount > 0 ? techCount : 3;
+
         if (selectedTechnician) {
             const isBooked = appointments.some(appt => {
                 const apptStart = parseISO(appt.fecha_hora_inicio);
                 const apptEnd = addMinutes(apptStart, appt.duracion);
-                // Check if any part of the appointment overlaps with our slot
                 return (isBefore(slot, apptEnd) && isBefore(apptStart, slotEnd));
             });
             return !isBooked;
         } else {
-            // Count technicians busy at any point during this slot
             const counts = appointments.filter(appt => {
                 const apptStart = parseISO(appt.fecha_hora_inicio);
                 const apptEnd = addMinutes(apptStart, appt.duracion);
                 return (isBefore(slot, apptEnd) && isBefore(apptStart, slotEnd));
             });
-
-            // If we have techCount active technicians, check if enough are available
-            return counts.length < techCount;
+            return counts.length < activeTechCount;
         }
     };
+
+    useEffect(() => {
+        if (!selectedService && !loading) {
+            navigate('/booking/servicios');
+        }
+    }, [selectedService, loading, navigate]);
 
     const handleSlotClick = (slot: Date) => {
         setDate(slot);
@@ -154,17 +160,18 @@ export default function FechaHora() {
                             <div className="grid grid-cols-4 gap-3">
                                 {generateSlots(day).map((slot) => {
                                     const available = isSlotAvailable(slot);
-                                    // Filter out past slots today
-                                    if (isBefore(slot, new Date())) return null;
+                                    const isPast = isBefore(slot, new Date());
 
                                     return (
                                         <button
                                             key={slot.toISOString()}
-                                            disabled={!available}
+                                            disabled={!available || isPast}
                                             onClick={() => handleSlotClick(slot)}
-                                            className={`py-2 px-1 rounded-lg text-sm font-medium transition-all ${available
+                                            className={`py-2 px-1 rounded-lg text-sm font-medium transition-all ${available && !isPast
                                                 ? 'bg-transparent border border-[var(--color-primary)] text-white hover:bg-[var(--color-primary)]'
-                                                : 'bg-white/5 text-gray-600 cursor-not-allowed border border-transparent'
+                                                : isPast
+                                                    ? 'bg-white/5 text-gray-700 cursor-not-allowed border border-transparent opacity-50'
+                                                    : 'bg-white/5 text-gray-600 cursor-not-allowed border border-transparent opacity-50'
                                                 }`}
                                         >
                                             {format(slot, 'HH:mm')}

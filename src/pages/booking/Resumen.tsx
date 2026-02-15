@@ -96,6 +96,32 @@ export default function Resumen() {
 
             if (apptError) throw apptError;
 
+            // 4. Sync to Google Sheets
+            const sheetsUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
+            if (sheetsUrl) {
+                try {
+                    await fetch(sheetsUrl, {
+                        method: 'POST',
+                        mode: 'no-cors', // Important for Google Apps Script
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            nombre: client.nombre,
+                            email: client.email,
+                            telefono: client.telefono,
+                            matricula: vehicle.matricula,
+                            vehiculo: `${vehicle.marca} ${vehicle.modelo}`,
+                            servicio: selectedService?.name,
+                            fecha_hora: format(startDate, 'dd/MM/yyyy HH:mm'),
+                            tecnico: selectedTechnician?.nombre || 'Cualquier técnico'
+                        })
+                    });
+                } catch (sheetErr) {
+                    console.error('Error syncing to Google Sheets:', sheetErr);
+                }
+            }
+
             // Success
             reset(); // Clear store? Maybe keep for success screen
             navigate('/booking/confirmada');
