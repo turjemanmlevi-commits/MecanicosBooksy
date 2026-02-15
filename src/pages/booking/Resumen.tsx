@@ -19,17 +19,18 @@ export default function Resumen() {
         setError(null);
 
         try {
-            // 1. Get or Create Client
+            // 1. Get or Create Client (Normalize phone first)
+            const cleanPhone = client.telefono.replace(/\s/g, '');
             let clientId;
+
             const { data: existingClient } = await supabase
                 .from('clientes')
                 .select('id')
-                .eq('telefono', client.telefono)
+                .eq('telefono', cleanPhone)
                 .single();
 
             if (existingClient) {
                 clientId = existingClient.id;
-                // Optionally update details
                 await supabase.from('clientes').update({
                     nombre: client.nombre,
                     email: client.email
@@ -39,7 +40,7 @@ export default function Resumen() {
                     .from('clientes')
                     .insert([{
                         nombre: client.nombre,
-                        telefono: client.telefono,
+                        telefono: cleanPhone,
                         email: client.email,
                         consentimiento_rgpd: client.consentimiento
                     }])
@@ -50,17 +51,17 @@ export default function Resumen() {
                 clientId = newClient.id;
             }
 
-            // 2. Get or Create Vehicle
+            // 2. Get or Create Vehicle (Normalize plate)
+            const cleanPlate = vehicle.matricula.replace(/\s/g, '').toUpperCase();
             let vehicleId;
             const { data: existingVehicle } = await supabase
                 .from('vehiculos')
                 .select('id')
-                .eq('matricula', vehicle.matricula)
+                .eq('matricula', cleanPlate)
                 .single();
 
             if (existingVehicle) {
                 vehicleId = existingVehicle.id;
-                // Update vehicle details if it exists
                 await supabase.from('vehiculos').update({
                     marca: vehicle.marca,
                     modelo: vehicle.modelo,
@@ -72,7 +73,7 @@ export default function Resumen() {
                     .from('vehiculos')
                     .insert([{
                         cliente_id: clientId,
-                        matricula: vehicle.matricula,
+                        matricula: cleanPlate,
                         marca: vehicle.marca,
                         modelo: vehicle.modelo,
                         anio: vehicle.anio,
@@ -95,30 +96,30 @@ export default function Resumen() {
                 .insert([{
                     cliente_id: clientId,
                     vehiculo_id: vehicleId,
-                    tecnico_id: selectedTechnician?.id || null, // Handle "Any" logic later
+                    tecnico_id: selectedTechnician?.id || null,
                     fecha_hora_inicio: startDate.toISOString(),
-                    duracion: selectedService?.duration || 30, // Use service duration
-                    estado: 'confirmada' // Auto-confirm for MVP
+                    duracion: selectedService?.duration || 30,
+                    estado: 'confirmada'
                 }]);
 
             if (apptError) throw apptError;
 
             // 4. Sync to Google Sheets
             const sheetsUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
-            if (sheetsUrl) {
+            if (!sheetsUrl) {
+                console.warn('VITE_GOOGLE_SHEETS_URL is not defined in environment variables');
+            } else {
                 try {
-                    // Send as text/plain to avoid CORS preflight with Google Apps Script
+                    // We AWAIT the fetch to ensure it's sent before navigating
                     await fetch(sheetsUrl, {
                         method: 'POST',
                         mode: 'no-cors',
-                        headers: {
-                            'Content-Type': 'text/plain',
-                        },
+                        headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify({
                             nombre: client.nombre,
                             email: client.email,
-                            telefono: client.telefono,
-                            matricula: vehicle.matricula,
+                            telefono: cleanPhone,
+                            matricula: cleanPlate,
                             marca: vehicle.marca,
                             modelo: vehicle.modelo,
                             anio: vehicle.anio,
@@ -129,17 +130,17 @@ export default function Resumen() {
                         })
                     });
                 } catch (sheetErr) {
-                    console.error('Error syncing to Google Sheets:', sheetErr);
+                    console.error('Sheet Sync Error:', sheetErr);
                 }
             }
 
             // Success
-            reset(); // Clear store? Maybe keep for success screen
+            reset();
             navigate('/booking/confirmada');
 
         } catch (err: any) {
             console.error('Error booking:', err);
-            setError(err.message || 'Error al procesar la reserva. Inténtelo de nuevo.');
+            setError(err.message || 'Error al procesar la reserva.');
         } finally {
             setLoading(false);
         }
