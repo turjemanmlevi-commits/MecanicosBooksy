@@ -27,10 +27,12 @@ export default function DatosVehiculo() {
                         const sheetData = await response.json();
 
                         if (sheetData && !sheetData.error && sheetData.matricula) {
+                            // If brand and model are joined in the sheet, we try to put it in 'marca'
+                            // and keep 'modelo' as is or empty.
                             setVehicle({
                                 matricula: sheetData.matricula,
-                                marca: sheetData.marca,
-                                modelo: sheetData.modelo,
+                                marca: sheetData.marca || '',
+                                modelo: sheetData.modelo || '',
                                 anio: String(sheetData.anio || ''),
                             });
                         }
