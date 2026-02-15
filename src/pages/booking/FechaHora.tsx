@@ -4,7 +4,7 @@ import { useBookingStore } from '../../store/bookingStore';
 import StepIndicator from '../../components/StepIndicator';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { addDays, format, startOfDay, isSameDay, parseISO, setHours, setMinutes, isBefore, addMinutes } from 'date-fns';
+import { addDays, format, startOfDay, parseISO, setHours, setMinutes, isBefore, addMinutes } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 // Configuration (could be fetched from DB)
@@ -31,31 +31,40 @@ export default function FechaHora() {
             const start = startOfDay(currentDate).toISOString();
             const end = addDays(currentDate, 6).toISOString();
 
-            // Fetch active technicians count
-            const { count } = await supabase
-                .from('tecnicos')
-                .select('*', { count: 'exact', head: true })
-                .eq('activo', true);
+            try {
+                // Fetch active technicians count
+                const { data: techs, error: techError } = await supabase
+                    .from('tecnicos')
+                    .select('id')
+                    .eq('activo', true);
 
-            if (count !== null) setTechCount(count);
+                if (!techError && techs) {
+                    setTechCount(techs.length);
+                } else {
+                    setTechCount(3); // Fallback to 3 if error or none found
+                }
 
-            // Fetch appointments
-            let query = supabase
-                .from('citas')
-                .select('fecha_hora_inicio, duracion, tecnico_id')
-                .gte('fecha_hora_inicio', start)
-                .lt('fecha_hora_inicio', end)
-                .neq('estado', 'cancelada');
+                // Fetch appointments
+                let query = supabase
+                    .from('citas')
+                    .select('fecha_hora_inicio, duracion, tecnico_id')
+                    .gte('fecha_hora_inicio', start)
+                    .lt('fecha_hora_inicio', end)
+                    .neq('estado', 'cancelada');
 
-            if (selectedTechnician) {
-                query = query.eq('tecnico_id', selectedTechnician.id);
+                if (selectedTechnician) {
+                    query = query.eq('tecnico_id', selectedTechnician.id);
+                }
+
+                const { data: appts, error: apptError } = await query;
+
+                if (!apptError && appts) setAppointments(appts);
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                setTechCount(3);
+            } finally {
+                setLoading(false);
             }
-
-            const { data: appts, error: apptError } = await query;
-
-
-            if (!apptError && appts) setAppointments(appts);
-            setLoading(false);
         }
 
         fetchData();
@@ -65,6 +74,9 @@ export default function FechaHora() {
     const slotDuration = selectedService?.duration || SLOT_DURATION;
 
     const generateSlots = (day: Date) => {
+        // Skip weekends (0 = Sunday, 6 = Saturday)
+        if (day.getDay() === 0 || day.getDay() === 6) return [];
+
         const slots = [];
         let currentTime = setMinutes(setHours(day, START_HOUR), 0);
         const endTime = setMinutes(setHours(day, END_HOUR), 0);
@@ -80,20 +92,26 @@ export default function FechaHora() {
         // Check if slot is in the past
         if (isBefore(slot, new Date())) return false;
 
-        // Check collision with appointments
+        const slotEnd = addMinutes(slot, slotDuration);
+
         if (selectedTechnician) {
             const isBooked = appointments.some(appt => {
                 const apptStart = parseISO(appt.fecha_hora_inicio);
                 const apptEnd = addMinutes(apptStart, appt.duracion);
-                return (isBefore(slot, apptEnd) && isBefore(apptStart, addMinutes(slot, slotDuration)));
+                // Check if any part of the appointment overlaps with our slot
+                return (isBefore(slot, apptEnd) && isBefore(apptStart, slotEnd));
             });
             return !isBooked;
         } else {
-            const apptsAtSlot = appointments.filter(appt => {
+            // Count technicians busy at any point during this slot
+            const counts = appointments.filter(appt => {
                 const apptStart = parseISO(appt.fecha_hora_inicio);
-                return isSameDay(apptStart, slot) && format(apptStart, 'HH:mm') === format(slot, 'HH:mm');
+                const apptEnd = addMinutes(apptStart, appt.duracion);
+                return (isBefore(slot, apptEnd) && isBefore(apptStart, slotEnd));
             });
-            return apptsAtSlot.length < techCount;
+
+            // If we have techCount active technicians, check if enough are available
+            return counts.length < techCount;
         }
     };
 

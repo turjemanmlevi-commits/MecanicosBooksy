@@ -10,6 +10,7 @@ import FechaHora from './pages/booking/FechaHora'
 import Resumen from './pages/booking/Resumen'
 import Confirmada from './pages/booking/Confirmada'
 import ConsultarCita from './pages/ConsultarCita'
+import MiPerfil from './pages/MiPerfil'
 
 function App() {
     return (
@@ -25,6 +26,7 @@ function App() {
                     <Route path="/booking/resumen" element={<Resumen />} />
                     <Route path="/booking/confirmada" element={<Confirmada />} />
                     <Route path="/consultar" element={<ConsultarCita />} />
+                    <Route path="/mi-perfil" element={<MiPerfil />} />
                 </Routes>
             </Layout>
         </Router>
