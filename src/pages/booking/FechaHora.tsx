@@ -53,18 +53,6 @@ export default function FechaHora() {
 
             const { data: appts, error: apptError } = await query;
 
-            // Fetch blocks
-            let blockQuery = supabase
-                .from('bloqueos')
-                .select('fecha_inicio, fecha_fin, tecnico_id')
-                .gte('fecha_fin', start)
-                .or(`fecha_inicio.lt.${end}`);
-
-            if (selectedTechnician) {
-                blockQuery = blockQuery.eq('tecnico_id', selectedTechnician.id);
-            }
-
-            const { data: blks, error: blkError } = await blockQuery;
 
             if (!apptError && appts) setAppointments(appts);
             setLoading(false);

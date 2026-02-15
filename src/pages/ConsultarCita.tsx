@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Search, Calendar, Clock, X, Car, User } from 'lucide-react';
+import { ChevronLeft, Search, Clock, Car, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
