@@ -107,11 +107,12 @@ export default function Resumen() {
             const sheetsUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
             if (sheetsUrl) {
                 try {
+                    // Send as text/plain to avoid CORS preflight with Google Apps Script
                     await fetch(sheetsUrl, {
                         method: 'POST',
-                        mode: 'no-cors', // Important for Google Apps Script
+                        mode: 'no-cors',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'Content-Type': 'text/plain',
                         },
                         body: JSON.stringify({
                             nombre: client.nombre,

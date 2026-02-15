@@ -82,8 +82,25 @@ export default function DatosVehiculo() {
 
     const validate = () => {
         const newErrors: Record<string, string> = {};
-        if (!vehicle.matricula.trim()) newErrors.matricula = 'La matrícula es obligatoria';
-        // Other fields optional but recommended
+
+        // License plate: Spanish (4 numbers 3 letters OR old format)
+        const plateRegex = /^(\d{4}\s?[A-Z]{3}|[A-Z]{1,2}\s?\d{4}\s?[A-Z]{1,2})$/;
+        const cleanPlate = vehicle.matricula.replace(/\s/g, '').toUpperCase();
+
+        if (!vehicle.matricula.trim()) {
+            newErrors.matricula = 'La matrícula es obligatoria';
+        } else if (!plateRegex.test(cleanPlate)) {
+            newErrors.matricula = 'Formato de matrícula no reconocido (ej: 1234 ABC)';
+        }
+
+        if (!vehicle.marca.trim()) newErrors.marca = 'La marca es obligatoria';
+        if (!vehicle.modelo.trim()) newErrors.modelo = 'El modelo es obligatorio';
+
+        // Year: 4 digits
+        if (vehicle.anio && !/^\d{4}$/.test(vehicle.anio)) {
+            newErrors.anio = 'El año debe tener 4 dígitos';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -130,24 +147,26 @@ export default function DatosVehiculo() {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-400">Marca</label>
+                        <label className="text-sm font-medium text-gray-400">Marca *</label>
                         <input
                             type="text"
                             value={vehicle.marca}
                             onChange={(e) => setVehicle({ marca: e.target.value })}
-                            className="w-full bg-[var(--bg-card)] border border-white/10 rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                            className={`w-full bg-[var(--bg-card)] border ${errors.marca ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors`}
                             placeholder="Ej. BMW"
                         />
+                        {errors.marca && <p className="text-red-500 text-xs">{errors.marca}</p>}
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-400">Modelo</label>
+                        <label className="text-sm font-medium text-gray-400">Modelo *</label>
                         <input
                             type="text"
                             value={vehicle.modelo}
                             onChange={(e) => setVehicle({ modelo: e.target.value })}
-                            className="w-full bg-[var(--bg-card)] border border-white/10 rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                            className={`w-full bg-[var(--bg-card)] border ${errors.modelo ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors`}
                             placeholder="Ej. Serie 3"
                         />
+                        {errors.modelo && <p className="text-red-500 text-xs">{errors.modelo}</p>}
                     </div>
                 </div>
 
@@ -157,9 +176,10 @@ export default function DatosVehiculo() {
                         type="text"
                         value={vehicle.anio}
                         onChange={(e) => setVehicle({ anio: e.target.value })}
-                        className="w-full bg-[var(--bg-card)] border border-white/10 rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                        className={`w-full bg-[var(--bg-card)] border ${errors.anio ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors`}
                         placeholder="Ej. 2020"
                     />
+                    {errors.anio && <p className="text-red-500 text-xs">{errors.anio}</p>}
                 </div>
 
                 <div className="space-y-2">

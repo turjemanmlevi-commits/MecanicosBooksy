@@ -63,9 +63,33 @@ export default function DatosCliente() {
 
     const validate = () => {
         const newErrors: Record<string, string> = {};
-        if (!client.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio';
-        if (!client.telefono.trim()) newErrors.telefono = 'El teléfono es obligatorio';
-        if (!client.consentimiento) newErrors.consentimiento = 'Debe aceptar la política de privacidad';
+
+        // Name: at least two words
+        if (!client.nombre.trim()) {
+            newErrors.nombre = 'El nombre es obligatorio';
+        } else if (client.nombre.trim().split(' ').length < 2) {
+            newErrors.nombre = 'Por favor, introduce nombre y apellidos';
+        }
+
+        // Phone: Spanish mobile or landline (9 digits)
+        const phoneRegex = /^[6789]\d{8}$/;
+        const cleanPhone = client.telefono.replace(/\s/g, '');
+        if (!client.telefono.trim()) {
+            newErrors.telefono = 'El teléfono es obligatorio';
+        } else if (!phoneRegex.test(cleanPhone)) {
+            newErrors.telefono = 'Introduce un número de teléfono válido (9 dígitos)';
+        }
+
+        // Email: strict format
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (client.email && !emailRegex.test(client.email)) {
+            newErrors.email = 'Introduce un email válido';
+        }
+
+        if (!client.consentimiento) {
+            newErrors.consentimiento = 'Debe aceptar la política de privacidad';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
