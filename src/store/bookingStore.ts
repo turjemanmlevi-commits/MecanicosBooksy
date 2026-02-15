@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Tecnico } from '../types/database';
 
 export type ServiceType = 'cambio_aceite' | 'pedir_cita' | 'mantenimiento';
@@ -39,38 +40,45 @@ interface BookingState {
     reset: () => void;
 }
 
-export const useBookingStore = create<BookingState>((set) => ({
-    client: {
-        nombre: '',
-        apellidos: '',
-        telefono: '',
-        email: '',
-        consentimiento: false,
-    },
-    vehicle: {
-        matricula: '',
-        marca: '',
-        modelo: '',
-        anio: '',
-        motivo: '',
-    },
-    selectedTechnician: null,
-    selectedDate: null,
-    selectedTimeSlot: null,
-    selectedService: null,
+export const useBookingStore = create<BookingState>()(
+    persist(
+        (set) => ({
+            client: {
+                nombre: '',
+                apellidos: '',
+                telefono: '',
+                email: '',
+                consentimiento: false,
+            },
+            vehicle: {
+                matricula: '',
+                marca: '',
+                modelo: '',
+                anio: '',
+                motivo: '',
+            },
+            selectedTechnician: null,
+            selectedDate: null,
+            selectedTimeSlot: null,
+            selectedService: null,
 
-    setClient: (client) => set((state) => ({ client: { ...state.client, ...client } })),
-    setVehicle: (vehicle) => set((state) => ({ vehicle: { ...state.vehicle, ...vehicle } })),
-    setTechnician: (tech) => set({ selectedTechnician: tech }),
-    setService: (service) => set({ selectedService: service }),
-    setDate: (date) => set({ selectedDate: date }),
-    setTimeSlot: (slot) => set({ selectedTimeSlot: slot }),
-    reset: () => set({
-        client: { nombre: '', apellidos: '', telefono: '', email: '', consentimiento: false },
-        vehicle: { matricula: '', marca: '', modelo: '', anio: '', motivo: '' },
-        selectedTechnician: null,
-        selectedDate: null,
-        selectedTimeSlot: null,
-        selectedService: null,
-    }),
-}));
+            setClient: (client) => set((state) => ({ client: { ...state.client, ...client } })),
+            setVehicle: (vehicle) => set((state) => ({ vehicle: { ...state.vehicle, ...vehicle } })),
+            setTechnician: (tech) => set({ selectedTechnician: tech }),
+            setService: (service) => set({ selectedService: service }),
+            setDate: (date) => set({ selectedDate: date }),
+            setTimeSlot: (slot) => set({ selectedTimeSlot: slot }),
+            reset: () => set({
+                client: { nombre: '', apellidos: '', telefono: '', email: '', consentimiento: false },
+                vehicle: { matricula: '', marca: '', modelo: '', anio: '', motivo: '' },
+                selectedTechnician: null,
+                selectedDate: null,
+                selectedTimeSlot: null,
+                selectedService: null,
+            }),
+        }),
+        {
+            name: 'booking-storage', // name of the item in local storage
+        }
+    )
+);

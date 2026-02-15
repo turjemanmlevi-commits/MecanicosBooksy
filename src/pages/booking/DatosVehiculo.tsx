@@ -1,13 +1,82 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../../store/bookingStore';
 import StepIndicator from '../../components/StepIndicator';
-import { ChevronRight, ChevronLeft, Car } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Car, Clock } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export default function DatosVehiculo() {
     const navigate = useNavigate();
-    const { vehicle, setVehicle } = useBookingStore();
+    const { vehicle, setVehicle, client } = useBookingStore();
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        async function fetchVehicleData() {
+            const { data: { user } } = await supabase.auth.getUser();
+            const email = user?.email || client.email;
+
+            if (email && !vehicle.matricula) {
+                setLoading(true);
+
+                // 1. Try to fetch from Google Sheets first
+                const sheetsUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
+                if (sheetsUrl) {
+                    try {
+                        const response = await fetch(`${sheetsUrl}?email=${encodeURIComponent(email)}`);
+                        const sheetData = await response.json();
+
+                        if (sheetData && !sheetData.error && sheetData.matricula) {
+                            setVehicle({
+                                matricula: sheetData.matricula,
+                                marca: sheetData.marca,
+                                modelo: sheetData.modelo,
+                                anio: String(sheetData.anio || ''),
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Error fetching from Google Sheets:', err);
+                    }
+                }
+
+                // 2. Fallback to Supabase if not found or sync
+                const { data: dbClient } = await supabase
+                    .from('clientes')
+                    .select('id')
+                    .eq('email', email)
+                    .single();
+
+                if (dbClient) {
+                    const { data: dbVehicle } = await supabase
+                        .from('vehiculos')
+                        .select('*')
+                        .eq('cliente_id', dbClient.id)
+                        .order('id', { ascending: false })
+                        .limit(1)
+                        .single();
+
+                    if (dbVehicle && !vehicle.matricula) { // Only fill if sheet request didn't find anything
+                        setVehicle({
+                            matricula: dbVehicle.matricula,
+                            marca: dbVehicle.marca,
+                            modelo: dbVehicle.modelo,
+                            anio: dbVehicle.anio
+                        });
+                    }
+                }
+                setLoading(false);
+            }
+        }
+        fetchVehicleData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center p-20 text-gray-400">
+                <Clock className="animate-spin mr-2" /> Cargando vehículo...
+            </div>
+        );
+    }
 
     const validate = () => {
         const newErrors: Record<string, string> = {};

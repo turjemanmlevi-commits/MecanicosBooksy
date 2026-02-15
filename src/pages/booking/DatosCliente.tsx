@@ -1,13 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../../store/bookingStore';
 import StepIndicator from '../../components/StepIndicator';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Clock } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export default function DatosCliente() {
     const navigate = useNavigate();
     const { client, setClient } = useBookingStore();
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        async function fetchClientData() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setLoading(true);
+                // Pre-fill email from auth
+                if (!client.email) setClient({ email: user.email });
+
+                // 1. Try to fetch from Google Sheets first (as requested)
+                const sheetsUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
+                if (sheetsUrl && user.email) {
+                    try {
+                        const response = await fetch(`${sheetsUrl}?email=${encodeURIComponent(user.email)}`);
+                        const sheetData = await response.json();
+
+                        if (sheetData && !sheetData.error) {
+                            if (!client.nombre) setClient({ nombre: sheetData.nombre });
+                            if (!client.telefono) setClient({ telefono: String(sheetData.telefono) });
+                            // We can also store the vehicle data from sheet to store if needed
+                        }
+                    } catch (err) {
+                        console.error('Error fetching from Google Sheets:', err);
+                    }
+                }
+
+                // 2. Fallback or Sync with Supabase
+                const { data: dbClient } = await supabase
+                    .from('clientes')
+                    .select('*')
+                    .eq('email', user.email)
+                    .single();
+
+                if (dbClient) {
+                    if (!client.nombre) setClient({ nombre: dbClient.nombre });
+                    if (!client.telefono) setClient({ telefono: dbClient.telefono });
+                }
+                setLoading(false);
+            }
+        }
+        fetchClientData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center p-20 text-gray-400">
+                <Clock className="animate-spin mr-2" /> Cargando tus datos...
+            </div>
+        );
+    }
 
     const validate = () => {
         const newErrors: Record<string, string> = {};

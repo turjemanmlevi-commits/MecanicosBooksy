@@ -60,6 +60,13 @@ export default function Resumen() {
 
             if (existingVehicle) {
                 vehicleId = existingVehicle.id;
+                // Update vehicle details if it exists
+                await supabase.from('vehiculos').update({
+                    marca: vehicle.marca,
+                    modelo: vehicle.modelo,
+                    anio: vehicle.anio,
+                    notas: vehicle.motivo
+                }).eq('id', vehicleId);
             } else {
                 const { data: newVehicle, error: vehicleError } = await supabase
                     .from('vehiculos')
@@ -88,7 +95,7 @@ export default function Resumen() {
                 .insert([{
                     cliente_id: clientId,
                     vehiculo_id: vehicleId,
-                    tecnico_id: selectedTechnician?.id || null, // Handle "Any" logic later (assign to random or leave null?)
+                    tecnico_id: selectedTechnician?.id || null, // Handle "Any" logic later
                     fecha_hora_inicio: startDate.toISOString(),
                     duracion: selectedService?.duration || 30, // Use service duration
                     estado: 'confirmada' // Auto-confirm for MVP
@@ -111,7 +118,10 @@ export default function Resumen() {
                             email: client.email,
                             telefono: client.telefono,
                             matricula: vehicle.matricula,
-                            vehiculo: `${vehicle.marca} ${vehicle.modelo}`,
+                            marca: vehicle.marca,
+                            modelo: vehicle.modelo,
+                            anio: vehicle.anio,
+                            motivo: vehicle.motivo,
                             servicio: selectedService?.name,
                             fecha_hora: format(startDate, 'dd/MM/yyyy HH:mm'),
                             tecnico: selectedTechnician?.nombre || 'Cualquier técnico'
