@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, User, LogIn } from 'lucide-react';
+import { ArrowLeft, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Header() {
