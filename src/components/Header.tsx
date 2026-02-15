@@ -44,9 +44,12 @@ export default function Header() {
             </div>
 
             <div className="flex justify-center w-1/3">
-                <h1 className="text-xl font-bold tracking-tighter cursor-pointer" onClick={() => navigate('/')}>
-                    MOTOR <span className="text-[var(--color-primary)]">EXTREMO</span>
-                </h1>
+                <img
+                    src="/logo-amarillo-sinbisel-5.png"
+                    alt="MOTOR EXTREMO"
+                    className="h-10 cursor-pointer object-contain"
+                    onClick={() => navigate('/')}
+                />
             </div>
 
             <div className="flex justify-end items-center gap-2 w-1/3">
