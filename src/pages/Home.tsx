@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Clock, LogIn } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -5,14 +6,27 @@ import { supabase } from '../lib/supabase';
 export default function Home() {
     const navigate = useNavigate();
 
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
+
     const handleGoogleLogin = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}/mi-perfil`
-            }
-        });
-        if (error) console.error('Error logging in:', error.message);
+        try {
+            setIsLoggingIn(true);
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/mi-perfil`,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
+                }
+            });
+            if (error) throw error;
+        } catch (error: any) {
+            console.error('Error logging in:', error.message);
+            alert('Error al iniciar sesión: ' + error.message);
+            setIsLoggingIn(false);
+        }
     };
 
     return (
@@ -69,10 +83,15 @@ export default function Home() {
                     <div className="border-t border-white/5 pt-3 mt-1">
                         <button
                             onClick={handleGoogleLogin}
-                            className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-200 font-bold py-3 px-4 rounded-lg text-sm transition-all"
+                            disabled={isLoggingIn}
+                            className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-200 font-bold py-3 px-4 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <LogIn size={18} />
-                            Añadir Cuenta de Google
+                            {isLoggingIn ? (
+                                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <LogIn size={18} />
+                            )}
+                            {isLoggingIn ? 'Conectando...' : 'Añadir Cuenta de Google'}
                         </button>
                     </div>
                 </div>
