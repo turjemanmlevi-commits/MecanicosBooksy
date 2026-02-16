@@ -1,65 +1,82 @@
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar, Home, Apple } from 'lucide-react';
+import { Check, Calendar, Home, Smartphone } from 'lucide-react';
 import { useBookingStore } from '../../store/bookingStore';
-import { addMinutes } from 'date-fns';
+import { addMinutes, format } from 'date-fns';
 
 export default function Confirmada() {
     const navigate = useNavigate();
     const { lastBooking } = useBookingStore();
 
+    // Helper for Google Calendar dates
+    const formatGoogleDate = (date: Date) => {
+        try {
+            return date.toISOString().replace(/-|:|\.\d+/g, '');
+        } catch (e) {
+            return '';
+        }
+    };
+
     const generateGoogleCalendarLink = () => {
         if (!lastBooking?.date || !lastBooking?.time) return '#';
 
-        const [hours, minutes] = lastBooking.time.split(':');
-        const startDate = new Date(lastBooking.date);
-        startDate.setHours(parseInt(hours), parseInt(minutes), 0);
+        try {
+            const [hours, minutes] = lastBooking.time.split(':');
+            const startDate = new Date(lastBooking.date);
+            startDate.setHours(parseInt(hours), parseInt(minutes), 0);
 
-        const endDate = addMinutes(startDate, lastBooking.duration);
+            const duration = lastBooking.duration || 30;
+            const endDate = addMinutes(startDate, duration);
 
-        const fmt = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, '');
-        const dates = `${fmt(startDate)}/${fmt(endDate)}`;
+            const dates = `${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`;
 
-        const params = new URLSearchParams({
-            action: 'TEMPLATE',
-            text: `Motobox: ${lastBooking.service}`,
-            dates: dates,
-            details: `Cita confirmada para ${lastBooking.service} en Motobox Garage.`,
-            location: 'Motobox Garage',
-        });
+            const params = new URLSearchParams({
+                action: 'TEMPLATE',
+                text: `Motobox: ${lastBooking.service || 'Cita Técnica'}`,
+                dates: dates,
+                details: `Cita confirmada en Motobox Garage.`,
+                location: 'Motobox Garage',
+            });
 
-        return `https://www.google.com/calendar/render?${params.toString()}`;
+            return `https://www.google.com/calendar/render?${params.toString()}`;
+        } catch (e) {
+            console.error('Error generating Google link', e);
+            return '#';
+        }
     };
 
     const generateAppleCalendarLink = () => {
         if (!lastBooking?.date || !lastBooking?.time) return '#';
 
-        const [hours, minutes] = lastBooking.time.split(':');
-        const startDate = new Date(lastBooking.date);
-        startDate.setHours(parseInt(hours), parseInt(minutes), 0);
-        const endDate = addMinutes(startDate, lastBooking.duration);
+        try {
+            const [hours, minutes] = lastBooking.time.split(':');
+            const startDate = new Date(lastBooking.date);
+            startDate.setHours(parseInt(hours), parseInt(minutes), 0);
+            const duration = lastBooking.duration || 30;
+            const endDate = addMinutes(startDate, duration);
 
-        const fmt = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, '');
+            const icsContent = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'BEGIN:VEVENT',
+                `DTSTART:${formatGoogleDate(startDate)}`,
+                `DTEND:${formatGoogleDate(endDate)}`,
+                `SUMMARY:Motobox: ${lastBooking.service || 'Cita Técnica'}`,
+                `DESCRIPTION:Cita confirmada en Motobox Garage.`,
+                'LOCATION:Motobox Garage',
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].join('\n');
 
-        const icsContent = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'BEGIN:VEVENT',
-            `DTSTART:${fmt(startDate)}`,
-            `DTEND:${fmt(endDate)}`,
-            `SUMMARY:Motobox: ${lastBooking.service}`,
-            `DESCRIPTION:Cita confirmada en Motobox Garage.`,
-            'LOCATION:Motobox Garage',
-            'END:VEVENT',
-            'END:VCALENDAR'
-        ].join('\n');
-
-        return `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
+            return `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
+        } catch (e) {
+            console.error('Error generating Apple link', e);
+            return '#';
+        }
     };
 
     return (
-        <div className="flex flex-col h-full animate-fade-in items-center justify-center text-center px-6">
-
-            <div className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-8 animate-bounce">
+        <div className="flex flex-col h-full animate-fade-in items-center justify-center text-center px-6 py-12">
+            <div className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-8">
                 <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/50">
                     <Check size={40} className="text-white" strokeWidth={3} />
                 </div>
@@ -69,22 +86,26 @@ export default function Confirmada() {
             <p className="text-gray-400 mb-12">Hemos enviado los detalles a su contacto.</p>
 
             <div className="grid grid-cols-1 gap-4 w-full max-w-sm">
-                <a
-                    href={generateGoogleCalendarLink()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full bg-[#4285F4] hover:bg-[#357abd] text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg text-sm"
-                >
-                    <Calendar size={20} /> AÑADIR A GOOGLE CALENDAR
-                </a>
+                {lastBooking && (
+                    <>
+                        <a
+                            href={generateGoogleCalendarLink()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full bg-[#4285F4] hover:bg-[#357abd] text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg text-sm"
+                        >
+                            <Calendar size={20} /> AÑADIR A GOOGLE CALENDAR
+                        </a>
 
-                <a
-                    href={generateAppleCalendarLink()}
-                    download="cita-motobox.ics"
-                    className="w-full bg-white text-black font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all border border-gray-200 shadow-md text-sm"
-                >
-                    <Apple size={20} /> AÑADIR A APPLE / ICAL
-                </a>
+                        <a
+                            href={generateAppleCalendarLink()}
+                            download="cita-motobox.ics"
+                            className="w-full bg-white text-black font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all border border-gray-200 shadow-md text-sm"
+                        >
+                            <Smartphone size={20} /> AÑADIR A APPLE / ICAL
+                        </a>
+                    </>
+                )}
 
                 <button
                     onClick={() => navigate('/')}

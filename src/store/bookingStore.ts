@@ -88,7 +88,7 @@ export const useBookingStore = create<BookingState>()(
             }),
         }),
         {
-            name: 'booking-storage', // name of the item in local storage
+            name: 'motobox-booking-storage-v2', // Changed name to force fresh state
         }
     )
 );
