@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../../store/bookingStore';
 import StepIndicator from '../../components/StepIndicator';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import { addDays, format, startOfDay, parseISO, setHours, setMinutes, isBefore, addMinutes } from 'date-fns';
+import { addDays, format, setHours, setMinutes, isBefore, addMinutes } from 'date-fns';
 import { es, enUS, he } from 'date-fns/locale';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -23,8 +22,6 @@ export default function FechaHora() {
     const { selectedTechnician, selectedService, setDate, setTimeSlot } = useBookingStore();
     const { t, language } = useTranslation();
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [appointments, setAppointments] = useState<any[]>([]);
-    const [techCount, setTechCount] = useState(3);
     const [loading, setLoading] = useState(true);
 
     const daysToShow = useMemo(() => {
@@ -32,45 +29,11 @@ export default function FechaHora() {
     }, [currentDate]);
 
     useEffect(() => {
-        async function fetchData() {
-            setLoading(true);
-            const start = startOfDay(currentDate).toISOString();
-            const end = addDays(currentDate, 6).toISOString();
-
-            try {
-                const { data: techs, error: techError } = await supabase
-                    .from('tecnicos')
-                    .select('id')
-                    .eq('activo', true);
-
-                if (!techError && techs) {
-                    setTechCount(techs.length);
-                } else {
-                    setTechCount(3);
-                }
-
-                let query = supabase
-                    .from('citas')
-                    .select('fecha_hora_inicio, duracion, tecnico_id')
-                    .gte('fecha_hora_inicio', start)
-                    .lt('fecha_hora_inicio', end)
-                    .neq('estado', 'cancelada');
-
-                if (selectedTechnician) {
-                    query = query.eq('tecnico_id', selectedTechnician.id);
-                }
-
-                const { data: appts, error: apptError } = await query;
-                if (!apptError && appts) setAppointments(appts);
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                setTechCount(3);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchData();
+        setLoading(true);
+        const timer = setTimeout(() => {
+            setLoading(false);
+        }, 500);
+        return () => clearTimeout(timer);
     }, [currentDate, selectedTechnician]);
 
     const slotDuration = selectedService?.duration || SLOT_DURATION;
