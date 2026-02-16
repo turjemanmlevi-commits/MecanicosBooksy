@@ -163,7 +163,7 @@ export default function Resumen() {
             setLastBooking({
                 date: selectedDate.toISOString(),
                 time: selectedTimeSlot,
-                service: selectedService?.name || 'Cita en Motobox',
+                service: (selectedService?.type && (t as any).services?.[selectedService.type]?.name) || selectedService?.name || 'Cita en Motobox',
                 duration: selectedService?.duration || 30
             });
 
@@ -241,7 +241,7 @@ export default function Resumen() {
 
                 <div className="bg-white/5 rounded-xl p-4 border border-white/5 ltr:text-left rtl:text-right">
                     <p className="font-bold text-lg mb-1 uppercase text-[var(--color-primary)]">
-                        {selectedService?.name || 'SERVICIO TALLER'}
+                        {selectedService ? ((t as any).services?.[selectedService.type]?.name || selectedService.name) : 'SERVICIO TALLER'}
                     </p>
                     <p className="text-sm text-gray-400">
                         {language === 'he' ? 'זמן משוער' : language === 'en' ? 'Estimated duration' : 'Duración estimada'}: {selectedService?.duration || 30} min

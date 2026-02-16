@@ -110,10 +110,10 @@ export default function Servicios() {
 
                             <div className="space-y-2 mb-8">
                                 <h3 className="text-xl font-black text-white group-hover:text-[var(--color-primary)] transition-colors leading-tight uppercase tracking-wide">
-                                    {service.name}
+                                    {(t as any).services?.[service.type]?.name || service.name}
                                 </h3>
                                 <p className="text-gray-400 text-sm line-clamp-2 min-h-[40px] leading-relaxed">
-                                    {service.description || (language === 'he' ? 'בדוק את פרטי השירות עם המומחים שלנו' : language === 'en' ? 'Check the details of this service with our experts.' : 'Consulta los detalles de este servicio con nuestros expertos.')}
+                                    {(t as any).services?.[service.type]?.description || service.description || (language === 'he' ? 'בדוק את פרטי השירות עם המומחים שלנו' : language === 'en' ? 'Check the details of this service with our experts.' : 'Consulta los detalles de este servicio con nuestros expertos.')}
                                 </p>
                             </div>
 

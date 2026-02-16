@@ -39,6 +39,36 @@ export const translations = {
             no_vehicles: 'No hay vehículos registrados',
             no_appointments: 'No hay citas registradas',
             logout: 'Cerrar Sesión',
+        },
+        services: {
+            cambio_aceite: {
+                name: 'Cambio de Aceite',
+                description: 'Mantén tu motor en perfectas condiciones con nuestro servicio de cambio de aceite y filtro.'
+            },
+            mantenimiento: {
+                name: 'Mantenimiento General',
+                description: 'Revisión exhaustiva y puesta a punto de los componentes clave de tu vehículo.'
+            },
+            pedir_cita: {
+                name: 'Diagnóstico',
+                description: 'Evaluación profesional para identificar cualquier problema técnico o mecánico.'
+            },
+            frenos: {
+                name: 'Sistema de Frenos',
+                description: 'Inspección y sustitución de pastillas y discos para asegurar tu seguridad.'
+            },
+            bateria: {
+                name: 'Batería y Eléctrico',
+                description: 'Comprobación de carga y sustitución de batería para un arranque fiable.'
+            },
+            itv: {
+                name: 'Revisión Pre-ITV',
+                description: 'Prepara tu vehículo para superar la inspección técnica oficial sin problemas.'
+            },
+            neumaticos: {
+                name: 'Neumáticos',
+                description: 'Revisión del estado, presión y sustitución de neumáticos.'
+            }
         }
     },
     en: {
@@ -81,6 +111,36 @@ export const translations = {
             no_vehicles: 'No vehicles registered',
             no_appointments: 'No appointments registered',
             logout: 'Logout',
+        },
+        services: {
+            cambio_aceite: {
+                name: 'Oil Change',
+                description: 'Keep your engine in perfect condition with our oil and filter change service.'
+            },
+            mantenimiento: {
+                name: 'General Maintenance',
+                description: 'Comprehensive review and tuning of your vehicle\'s key components.'
+            },
+            pedir_cita: {
+                name: 'Diagnosis',
+                description: 'Professional evaluation to identify any technical or mechanical problems.'
+            },
+            frenos: {
+                name: 'Brake System',
+                description: 'Inspection and replacement of pads and discs to ensure your safety.'
+            },
+            bateria: {
+                name: 'Battery & Electrical',
+                description: 'Charging check and battery replacement for reliable starting.'
+            },
+            itv: {
+                name: 'Pre-ITV Inspection',
+                description: 'Prepare your vehicle to pass the official technical inspection without problems.'
+            },
+            neumaticos: {
+                name: 'Tires',
+                description: 'Checking status, pressure and tire replacement.'
+            }
         }
     },
     he: {
@@ -123,6 +183,36 @@ export const translations = {
             no_vehicles: 'אין רכבים רשומים',
             no_appointments: 'אין תורות רשומים',
             logout: 'התנתקות',
+        },
+        services: {
+            cambio_aceite: {
+                name: 'החלפת שמן',
+                description: 'שמור על המנוע שלך במצב מושלם עם שירות החלפת שמן ופילטר שלנו.'
+            },
+            mantenimiento: {
+                name: 'תחזוקה כללית',
+                description: 'בדיקה מקיפה וכוונון של רכיבי המפתח ברכב שלך.'
+            },
+            pedir_cita: {
+                name: 'אבחון',
+                description: 'הערכה מקצועית לזיהוי בעיות טכניות או מכאניות.'
+            },
+            frenos: {
+                name: 'מערכת בלמים',
+                description: 'בדיקה והחלפה של רפידות ודיסקים כדי להבטיח את בטיחותך.'
+            },
+            bateria: {
+                name: 'מצבר וחשמל',
+                description: 'בדיקת טעינה והחלפת מצבר להתנעה אמינה.'
+            },
+            itv: {
+                name: 'בדיקה לפני טסט',
+                description: 'הכן את רכבך למעבר בדיקת הרישוי השנתית ללא בעיות.'
+            },
+            neumaticos: {
+                name: 'צמיגים',
+                description: 'בדיקת מצב, לחץ אוויר והחלפת צמיגים.'
+            }
         }
     }
 };

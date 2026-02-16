@@ -87,7 +87,7 @@ export const useBookingStore = create<BookingState>()(
             selectedDate: null,
             selectedTimeSlot: null,
             selectedService: null,
-            language: 'es',
+            // Keep language as is
         }),
     })
 );
