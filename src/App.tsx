@@ -13,28 +13,25 @@ import Confirmada from './pages/booking/Confirmada'
 import ConsultarCita from './pages/ConsultarCita'
 import MiPerfil from './pages/MiPerfil'
 import ProximaCita from './pages/booking/ProximaCita'
-import AuthGate from './components/AuthGate'
 
 function App() {
     return (
         <Router>
-            <AuthGate>
-                <Layout>
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/booking/servicios" element={<Servicios />} />
-                        <Route path="/booking/cliente" element={<DatosCliente />} />
-                        <Route path="/booking/vehiculo" element={<DatosVehiculo />} />
-                        <Route path="/booking/profesional" element={<Profesional />} />
-                        <Route path="/booking/fecha-hora" element={<FechaHora />} />
-                        <Route path="/booking/resumen" element={<Resumen />} />
-                        <Route path="/booking/confirmada" element={<Confirmada />} />
-                        <Route path="/proxima-cita" element={<ProximaCita />} />
-                        <Route path="/consultar" element={<ConsultarCita />} />
-                        <Route path="/mi-perfil" element={<MiPerfil />} />
-                    </Routes>
-                </Layout>
-            </AuthGate>
+            <Layout>
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/booking/servicios" element={<Servicios />} />
+                    <Route path="/booking/cliente" element={<DatosCliente />} />
+                    <Route path="/booking/vehiculo" element={<DatosVehiculo />} />
+                    <Route path="/booking/profesional" element={<Profesional />} />
+                    <Route path="/booking/fecha-hora" element={<FechaHora />} />
+                    <Route path="/booking/resumen" element={<Resumen />} />
+                    <Route path="/booking/confirmada" element={<Confirmada />} />
+                    <Route path="/proxima-cita" element={<ProximaCita />} />
+                    <Route path="/consultar" element={<ConsultarCita />} />
+                    <Route path="/mi-perfil" element={<MiPerfil />} />
+                </Routes>
+            </Layout>
         </Router>
     )
 }
