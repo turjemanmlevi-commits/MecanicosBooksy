@@ -142,10 +142,10 @@ export default function Home() {
             <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-6 text-center py-12 gap-12">
                 <div className="space-y-4 animate-fade-in mb-4">
                     <img src="/logo-amarillo-sinbisel-5.png" alt="MOTOBOX" className="h-24 mx-auto mb-6 object-contain" />
-                    <h1 className="text-6xl font-black text-white tracking-widest uppercase mb-2">
-                        {t.home.title}
+                    <h1 className="text-6xl font-black text-[var(--color-primary)] tracking-widest uppercase mb-2">
+                        {t.home.title} {t.home.subtitle}
                     </h1>
-                    <p className="text-xl text-[var(--color-primary)] font-bold tracking-[0.4em] uppercase">{t.home.motto}</p>
+                    <p className="text-xl text-white font-bold tracking-[0.4em] uppercase">{t.home.motto}</p>
                 </div>
 
                 <div className="w-full max-w-sm flex flex-col gap-6">
