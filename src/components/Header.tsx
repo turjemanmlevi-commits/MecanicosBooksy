@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, User, Languages } from 'lucide-react';
+import { ArrowLeft, User, Languages, ChevronLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useBookingStore } from '../store/bookingStore';
 
@@ -72,13 +72,23 @@ export default function Header() {
                     onClick={handleProfileClick}
                     className="flex items-center gap-2 group p-1"
                 >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${user ? 'bg-[var(--color-primary)] shadow-[0_0_10px_rgba(192,0,0,0.5)]' : 'bg-white/10 group-hover:bg-white/20'}`}>
+                    {user && (
+                        <span className="text-white text-xs font-bold hidden sm:block">
+                            {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0]}
+                        </span>
+                    )}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${user ? 'bg-[var(--color-primary)] overflow-hidden shadow-[0_0_10px_rgba(192,0,0,0.5)]' : 'bg-white/10 group-hover:bg-white/20'}`}>
                         {user ? (
-                            <span className="text-white text-xs font-bold uppercase">{user.email?.[0]}</span>
+                            user.user_metadata?.avatar_url ? (
+                                <img src={user.user_metadata.avatar_url} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-white text-xs font-bold uppercase">{user.email?.[0]}</span>
+                            )
                         ) : (
                             <User size={16} className="text-white/70" />
                         )}
                     </div>
+                    <ChevronLeft size={14} className={`text-gray-500 transition-transform ${language === 'he' ? 'rotate-90' : '-rotate-90'}`} />
                 </button>
             </div>
         </header>

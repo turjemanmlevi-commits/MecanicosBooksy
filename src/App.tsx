@@ -12,6 +12,7 @@ import Resumen from './pages/booking/Resumen'
 import Confirmada from './pages/booking/Confirmada'
 import ConsultarCita from './pages/ConsultarCita'
 import MiPerfil from './pages/MiPerfil'
+import ProximaCita from './pages/booking/ProximaCita'
 
 function App() {
     return (
@@ -26,6 +27,7 @@ function App() {
                     <Route path="/booking/fecha-hora" element={<FechaHora />} />
                     <Route path="/booking/resumen" element={<Resumen />} />
                     <Route path="/booking/confirmada" element={<Confirmada />} />
+                    <Route path="/proxima-cita" element={<ProximaCita />} />
                     <Route path="/consultar" element={<ConsultarCita />} />
                     <Route path="/mi-perfil" element={<MiPerfil />} />
                 </Routes>

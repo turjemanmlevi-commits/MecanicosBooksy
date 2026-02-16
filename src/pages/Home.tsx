@@ -1,18 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Clock, LogIn } from 'lucide-react';
+import { MapPin, Clock, LogIn, ChevronRight, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import PendingAppointmentsModal from '../components/PendingAppointmentsModal';
 import { useTranslation } from '../hooks/useTranslation';
 
 export default function Home() {
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, language } = useTranslation();
 
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [showPendingModal, setShowPendingModal] = useState(false);
     const [pendingAppointments, setPendingAppointments] = useState<any[]>([]);
     const [checkingAppointments, setCheckingAppointments] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [nextAppointment, setNextAppointment] = useState<any>(null);
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) {
+                setUser(session.user);
+                fetchNextAppointment(session.user.email!);
+            }
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.user) {
+                setUser(session.user);
+                fetchNextAppointment(session.user.email!);
+            } else {
+                setUser(null);
+                setNextAppointment(null);
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const fetchNextAppointment = async (email: string) => {
+        try {
+            const { data: client } = await supabase
+                .from('clientes')
+                .select('id')
+                .eq('email', email)
+                .maybeSingle();
+
+            if (client) {
+                const { data: appt } = await supabase
+                    .from('citas')
+                    .select(`
+                        *,
+                        vehiculos (matricula, marca, modelo),
+                        tecnicos (nombre)
+                    `)
+                    .eq('cliente_id', client.id)
+                    .eq('estado', 'confirmada')
+                    .gte('fecha_hora_inicio', new Date().toISOString())
+                    .order('fecha_hora_inicio', { ascending: true })
+                    .limit(1)
+                    .maybeSingle();
+
+                setNextAppointment(appt);
+            }
+        } catch (err) {
+            console.error("Error fetching next appointment:", err);
+        }
+    };
 
     const handleGoogleLogin = async () => {
         try {
@@ -20,7 +73,7 @@ export default function Home() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/mi-perfil`,
+                    redirectTo: `${window.location.origin}/`,
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',
@@ -36,10 +89,13 @@ export default function Home() {
     };
 
     const handleBookClick = async () => {
+        if (nextAppointment) {
+            navigate('/proxima-cita');
+            return;
+        }
+
         setCheckingAppointments(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-
             if (user) {
                 // Check if client exists
                 const { data: client } = await supabase
@@ -57,7 +113,7 @@ export default function Home() {
                             tecnicos (nombre)
                         `)
                         .eq('cliente_id', client.id)
-                        .eq('estado', 'pendiente')
+                        .eq('estado', 'confirmada')
                         .gte('fecha_hora_inicio', new Date().toISOString())
                         .order('fecha_hora_inicio', { ascending: true });
 
@@ -90,9 +146,12 @@ export default function Home() {
 
             if (error) throw error;
 
-            setPendingAppointments(prev => prev.filter(a => a.id !== id));
-            if (pendingAppointments.length === 1) {
+            setPendingAppointments(prev => prev.filter(p => p.id !== id));
+            if (pendingAppointments.length <= 1) {
                 setShowPendingModal(false);
+            }
+            if (nextAppointment?.id === id) {
+                setNextAppointment(null);
             }
         } catch (error) {
             console.error("Error canceling appointment:", error);
@@ -101,7 +160,7 @@ export default function Home() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen relative">
+        <div className="flex flex-col min-h-screen relative" dir={language === 'he' ? 'rtl' : 'ltr'}>
             <PendingAppointmentsModal
                 isOpen={showPendingModal}
                 onClose={() => setShowPendingModal(false)}
@@ -126,17 +185,26 @@ export default function Home() {
                     <button
                         onClick={handleBookClick}
                         disabled={checkingAppointments}
-                        className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-bold py-5 px-8 rounded-xl text-xl uppercase tracking-wider transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(192,0,0,0.3)] disabled:opacity-70 disabled:cursor-wait"
+                        className={`w-full ${nextAppointment ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]'} text-white font-bold py-5 px-8 rounded-xl text-xl uppercase tracking-wider transition-all transform hover:scale-105 shadow-lg shadow-black/40 disabled:opacity-70 disabled:cursor-wait flex items-center justify-center gap-2`}
                     >
-                        {checkingAppointments ? t.common.loading : t.home.book}
+                        {checkingAppointments ? t.common.loading : (nextAppointment ? t.home.next_appointment : t.home.book)}
+                        {nextAppointment && <ChevronRight size={24} className={language === 'he' ? 'rotate-180' : ''} />}
                     </button>
 
-                    <button
-                        onClick={() => navigate('/consultar')}
-                        className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-wider border-b border-gray-600 hover:border-white pb-1 self-center"
-                    >
-                        {t.home.check}
-                    </button>
+                    {!nextAppointment && (
+                        <button
+                            onClick={() => navigate('/consultar')}
+                            className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-wider border-b border-gray-600 hover:border-white pb-1 self-center"
+                        >
+                            {t.home.check}
+                        </button>
+                    )}
+                </div>
+
+                {/* Promotional Banner Styled like the screenshot */}
+                <div className="w-full max-w-sm bg-cyan-100/10 border border-cyan-500/20 rounded-lg p-3 flex items-center justify-center gap-2 text-cyan-200 font-bold uppercase tracking-widest text-sm shadow-inner mt-4">
+                    <Sparkles size={16} />
+                    {language === 'he' ? 'אמנות התחזוקה' : language === 'en' ? 'The art of maintenance' : 'El arte del mantenimiento'}
                 </div>
 
                 <div className="w-full max-w-sm bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
@@ -147,33 +215,35 @@ export default function Home() {
                         className="flex items-start gap-3 text-left mb-3 hover:bg-white/5 p-2 -m-2 rounded-lg transition-colors group"
                     >
                         <MapPin className="text-[var(--color-primary)] shrink-0 mt-1 group-hover:scale-110 transition-transform" size={18} />
-                        <div>
+                        <div className="ltr:text-left rtl:text-right">
                             <p className="text-white font-medium text-sm group-hover:text-[var(--color-primary)] transition-colors">Av. de los Lirios, 78</p>
                             <p className="text-gray-400 text-xs">29651 Las Lagunas de Mijas, Málaga</p>
                         </div>
                     </a>
                     <div className="flex items-center gap-3 text-left p-2 -m-2 mb-3">
                         <Clock className="text-[var(--color-primary)] shrink-0" size={18} />
-                        <div>
-                            <p className="text-white font-medium text-sm">Lunes - Viernes</p>
+                        <div className="ltr:text-left rtl:text-right">
+                            <p className="text-white font-medium text-sm">{language === 'he' ? 'שני - שישי' : 'Lunes - Viernes'}</p>
                             <p className="text-gray-400 text-xs">09:00 - 19:00</p>
                         </div>
                     </div>
 
-                    <div className="border-t border-white/5 pt-3 mt-1">
-                        <button
-                            onClick={handleGoogleLogin}
-                            disabled={isLoggingIn}
-                            className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-200 font-bold py-3 px-4 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isLoggingIn ? (
-                                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                                <LogIn size={18} />
-                            )}
-                            {isLoggingIn ? t.home.connecting : t.home.login}
-                        </button>
-                    </div>
+                    {!user && (
+                        <div className="border-t border-white/5 pt-3 mt-1">
+                            <button
+                                onClick={handleGoogleLogin}
+                                disabled={isLoggingIn}
+                                className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-200 font-bold py-3 px-4 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoggingIn ? (
+                                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <LogIn size={18} />
+                                )}
+                                {isLoggingIn ? t.home.connecting : t.home.login}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
