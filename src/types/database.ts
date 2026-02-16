@@ -67,7 +67,7 @@ export interface Servicio {
     name: string;
     description: string | null;
     duration: number;
-    price: number | null;
+    price: string | null;
     is_active: boolean;
     created_at: string;
 }
