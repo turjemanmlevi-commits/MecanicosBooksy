@@ -121,7 +121,7 @@ export default function Servicios() {
                                         {service.price ? `${service.price}€` : 'Consultar'}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full border border-white/5 group-hover:border-[var(--color-primary)]/20 transition-colors">
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full border border-white/5 group-hover:border-[var(--color-primary)]/20 transition-colors mb-4">
                                     <Clock className="w-3.5 h-3.5 text-[var(--color-primary)]" />
                                     <span className="text-xs font-bold text-gray-300">{service.duration} min</span>
                                 </div>
