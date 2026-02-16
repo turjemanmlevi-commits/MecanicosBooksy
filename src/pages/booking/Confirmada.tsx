@@ -102,7 +102,7 @@ export default function Confirmada() {
                             download="cita-motobox.ics"
                             className="w-full bg-white text-black font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all border border-gray-200 shadow-md text-sm"
                         >
-                            <Smartphone size={20} /> AÑADIR A APPLE / ICAL
+                            <Smartphone size={20} /> APPLE CALENDARIO
                         </a>
                     </>
                 )}
