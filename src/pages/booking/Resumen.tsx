@@ -143,6 +143,7 @@ export default function Resumen() {
                         nombre: client.nombre,
                         fecha_hora: format(startDate, 'dd/MM/yyyy HH:mm'),
                         servicio: selectedService?.name,
+                        duracion: selectedService?.duration,
                         matricula: cleanPlate,
                         tecnico: selectedTechnician?.nombre || 'Cualquier técnico'
                     }
