@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Clock, LogIn, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import PendingAppointmentsModal from '../components/PendingAppointmentsModal';
+import NextAppointmentModal from '../components/NextAppointmentModal';
 import { useTranslation } from '../hooks/useTranslation';
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
     const [checkingAppointments, setCheckingAppointments] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [nextAppointment, setNextAppointment] = useState<any>(null);
+    const [showNextApptModal, setShowNextApptModal] = useState(false);
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,7 +53,8 @@ export default function Home() {
                     .select(`
                         *,
                         vehiculos (matricula, marca, modelo),
-                        tecnicos (nombre)
+                        tecnicos (nombre),
+                        servicios (name, price)
                     `)
                     .eq('cliente_id', client.id)
                     .eq('estado', 'confirmada')
@@ -85,7 +88,7 @@ export default function Home() {
 
     const handleBookClick = async () => {
         if (nextAppointment) {
-            navigate('/proxima-cita');
+            setShowNextApptModal(true);
             return;
         }
 
@@ -137,14 +140,18 @@ export default function Home() {
                 onCancelAppointment={() => { }}
             />
 
+            <NextAppointmentModal
+                isOpen={showNextApptModal}
+                onClose={() => setShowNextApptModal(false)}
+                appointment={nextAppointment}
+                user={user}
+            />
+
             <div className="absolute inset-0 bg-[#0B0B0B] bg-[url('/hero.jpg')] bg-cover bg-center bg-no-repeat opacity-40"></div>
 
             <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-6 text-center py-12 gap-12">
                 <div className="space-y-4 animate-fade-in mb-4">
-                    <img src="/logo-amarillo-sinbisel-5.png" alt="MOTOBOX" className="h-24 mx-auto mb-6 object-contain" />
-                    <h1 className="text-6xl font-black text-[var(--color-primary)] tracking-widest uppercase mb-2">
-                        {t.home.title} {t.home.subtitle}
-                    </h1>
+                    <img src="/logo-amarillo-sinbisel-5.png" alt="MOTOBOX" className="h-40 mx-auto mb-6 object-contain" />
                     <p className="text-xl text-white font-bold tracking-[0.4em] uppercase">{t.home.motto}</p>
                 </div>
 

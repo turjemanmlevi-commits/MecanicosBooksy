@@ -89,6 +89,10 @@ export default function FechaHora() {
 
     const isSlotAvailable = (slot: Date) => {
         if (isBefore(slot, new Date())) return false;
+        // Temporary reset: ignore appointments to show all slots as available
+        return true;
+
+        /* Original logic:
         const slotEnd = addMinutes(slot, slotDuration);
         const activeTechCount = techCount > 0 ? techCount : 3;
 
@@ -107,6 +111,7 @@ export default function FechaHora() {
             });
             return counts.length < activeTechCount;
         }
+        */
     };
 
     useEffect(() => {
