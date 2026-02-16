@@ -165,12 +165,20 @@ export default function Home() {
                         {!checkingAppointments && <ChevronRight size={28} className={language === 'he' ? 'rotate-180' : ''} />}
                     </button>
 
-                    <button
-                        onClick={() => navigate('/consultar')}
-                        className="text-gray-400 hover:text-white transition-all text-sm font-bold uppercase tracking-widest border-b border-transparent hover:border-white pb-1 self-center"
-                    >
-                        {t.home.check}
-                    </button>
+                    {!user && (
+                        <button
+                            onClick={handleGoogleLogin}
+                            disabled={isLoggingIn}
+                            className="bg-white/10 hover:bg-white/20 text-white font-black py-4 px-6 rounded-2xl text-sm transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 w-full max-w-[200px] self-center uppercase tracking-widest"
+                        >
+                            {isLoggingIn ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <LogIn size={18} />
+                            )}
+                            {isLoggingIn ? t.home.connecting : t.home.login}
+                        </button>
+                    )}
                 </div>
 
                 <div className="w-full max-w-md grid grid-cols-1 gap-4 mt-8">
@@ -200,22 +208,14 @@ export default function Home() {
                             </div>
                         </div>
 
-                        {!user && (
-                            <div className="pt-2">
-                                <button
-                                    onClick={handleGoogleLogin}
-                                    disabled={isLoggingIn}
-                                    className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-200 font-black py-4 px-6 rounded-2xl text-sm transition-all active:scale-95 disabled:opacity-50"
-                                >
-                                    {isLoggingIn ? (
-                                        <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                        <LogIn size={20} />
-                                    )}
-                                    {isLoggingIn ? t.home.connecting : t.home.login}
-                                </button>
-                            </div>
-                        )}
+                        <div className="pt-2 flex flex-col items-center">
+                            <button
+                                onClick={() => navigate('/consultar')}
+                                className="text-gray-400 hover:text-white transition-all text-sm font-bold uppercase tracking-widest border-b border-transparent hover:border-white pb-1"
+                            >
+                                {t.home.check}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
