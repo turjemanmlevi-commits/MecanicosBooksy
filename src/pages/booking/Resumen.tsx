@@ -219,7 +219,7 @@ export default function Resumen() {
                     </p>
                     {selectedService?.price && (
                         <p className="text-xl font-bold text-white mt-2">
-                            Total: {typeof selectedService.price === 'number' ? `${selectedService.price}€` : selectedService.price}
+                            Total: {selectedService.price}€
                         </p>
                     )}
                 </div>
