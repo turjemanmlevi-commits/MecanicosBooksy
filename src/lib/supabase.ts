@@ -1,10 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Use environment variables from Vite, with fallbacks for production robustness
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://pjwucakxqubrvbuzvidn.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable__FgRx0gwyqc-YypwsuHNpA_Q9GqzwuF';
 
-if (!supabaseUrl || !supabaseKey) {
-    console.error('Supabase URL or Key is missing in environment variables');
-}
-
-export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
+export const supabase = createClient(supabaseUrl, supabaseKey);
