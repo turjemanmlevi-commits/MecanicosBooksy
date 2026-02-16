@@ -1,8 +1,60 @@
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar, Home } from 'lucide-react';
+import { Check, Calendar, Home, Apple } from 'lucide-react';
+import { useBookingStore } from '../../store/bookingStore';
+import { addMinutes } from 'date-fns';
 
 export default function Confirmada() {
     const navigate = useNavigate();
+    const { lastBooking } = useBookingStore();
+
+    const generateGoogleCalendarLink = () => {
+        if (!lastBooking?.date || !lastBooking?.time) return '#';
+
+        const [hours, minutes] = lastBooking.time.split(':');
+        const startDate = new Date(lastBooking.date);
+        startDate.setHours(parseInt(hours), parseInt(minutes), 0);
+
+        const endDate = addMinutes(startDate, lastBooking.duration);
+
+        const fmt = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, '');
+        const dates = `${fmt(startDate)}/${fmt(endDate)}`;
+
+        const params = new URLSearchParams({
+            action: 'TEMPLATE',
+            text: `Motobox: ${lastBooking.service}`,
+            dates: dates,
+            details: `Cita confirmada para ${lastBooking.service} en Motobox Garage.`,
+            location: 'Motobox Garage',
+        });
+
+        return `https://www.google.com/calendar/render?${params.toString()}`;
+    };
+
+    const generateAppleCalendarLink = () => {
+        if (!lastBooking?.date || !lastBooking?.time) return '#';
+
+        const [hours, minutes] = lastBooking.time.split(':');
+        const startDate = new Date(lastBooking.date);
+        startDate.setHours(parseInt(hours), parseInt(minutes), 0);
+        const endDate = addMinutes(startDate, lastBooking.duration);
+
+        const fmt = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, '');
+
+        const icsContent = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'BEGIN:VEVENT',
+            `DTSTART:${fmt(startDate)}`,
+            `DTEND:${fmt(endDate)}`,
+            `SUMMARY:Motobox: ${lastBooking.service}`,
+            `DESCRIPTION:Cita confirmada en Motobox Garage.`,
+            'LOCATION:Motobox Garage',
+            'END:VEVENT',
+            'END:VCALENDAR'
+        ].join('\n');
+
+        return `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
+    };
 
     return (
         <div className="flex flex-col h-full animate-fade-in items-center justify-center text-center px-6">
@@ -16,17 +68,27 @@ export default function Confirmada() {
             <h2 className="text-3xl font-bold mb-2">¡Cita Confirmada!</h2>
             <p className="text-gray-400 mb-12">Hemos enviado los detalles a su contacto.</p>
 
-            <div className="space-y-4 w-full max-w-sm">
-                <button
-                    onClick={() => window.alert('Funcionalidad de calendario en desarrollo')}
-                    className="w-full bg-[var(--bg-card)] border border-white/10 hover:border-white hover:bg-white/5 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
+            <div className="grid grid-cols-1 gap-4 w-full max-w-sm">
+                <a
+                    href={generateGoogleCalendarLink()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-[#4285F4] hover:bg-[#357abd] text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg text-sm"
                 >
-                    <Calendar size={20} /> AÑADIR AL CALENDARIO
-                </button>
+                    <Calendar size={20} /> AÑADIR A GOOGLE CALENDAR
+                </a>
+
+                <a
+                    href={generateAppleCalendarLink()}
+                    download="cita-motobox.ics"
+                    className="w-full bg-white text-black font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all border border-gray-200 shadow-md text-sm"
+                >
+                    <Apple size={20} /> AÑADIR A APPLE / ICAL
+                </a>
 
                 <button
                     onClick={() => navigate('/')}
-                    className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-900/20 active:scale-95"
+                    className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-900/20 active:scale-95 text-sm"
                 >
                     <Home size={20} /> VOLVER AL INICIO
                 </button>

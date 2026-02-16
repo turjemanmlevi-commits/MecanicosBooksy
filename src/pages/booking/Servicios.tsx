@@ -39,8 +39,7 @@ export default function Servicios() {
         setService({
             type: service.type as ServiceType,
             duration: service.duration,
-            name: service.name,
-            price: service.price || 'Consultar'
+            name: service.name
         });
         navigate('/booking/profesional');
     };
@@ -116,14 +115,11 @@ export default function Servicios() {
 
                             <div className="mt-auto flex items-end justify-between border-t border-white/5 pt-6">
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Precio</span>
-                                    <span className="text-2xl font-black text-white tracking-tighter">
-                                        {service.price ? `${service.price}€` : 'Consultar'}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full border border-white/5 group-hover:border-[var(--color-primary)]/20 transition-colors mb-4">
-                                    <Clock className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-                                    <span className="text-xs font-bold text-gray-300">{service.duration} min</span>
+                                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Duración</span>
+                                    <div className="flex items-center gap-1.5 py-1.5 transition-colors">
+                                        <Clock className="w-5 h-5 text-[var(--color-primary)]" />
+                                        <span className="text-xl font-black text-white">{service.duration} min</span>
+                                    </div>
                                 </div>
                             </div>
 

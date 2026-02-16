@@ -9,7 +9,16 @@ import { es } from 'date-fns/locale';
 
 export default function Resumen() {
     const navigate = useNavigate();
-    const { client, vehicle, selectedTechnician, selectedDate, selectedTimeSlot, selectedService, reset } = useBookingStore();
+    const {
+        client,
+        vehicle,
+        selectedTechnician,
+        selectedDate,
+        selectedTimeSlot,
+        selectedService,
+        reset,
+        setLastBooking
+    } = useBookingStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -153,6 +162,14 @@ export default function Resumen() {
                 // We don't throw here to not block the user if only the email fails
             }
 
+            // 6. Store booking data for the confirmation page before resetting
+            setLastBooking({
+                date: selectedDate.toISOString(),
+                time: selectedTimeSlot,
+                service: selectedService?.name || 'Cita en Motobox',
+                duration: selectedService?.duration || 30
+            });
+
             // Success
             reset();
             navigate('/booking/confirmada');
@@ -236,11 +253,6 @@ export default function Resumen() {
                     <p className="text-sm text-gray-400">
                         Duración estimada: {selectedService?.duration || 30} min
                     </p>
-                    {selectedService?.price && (
-                        <p className="text-xl font-bold text-white mt-2">
-                            Total: {selectedService.price}€
-                        </p>
-                    )}
                 </div>
 
                 {/* Policy Warning */}

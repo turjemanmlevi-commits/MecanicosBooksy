@@ -31,12 +31,19 @@ interface BookingState {
     selectedTimeSlot: string | null;
     selectedService: Service | null;
 
+    lastBooking: {
+        date: string | null;
+        time: string | null;
+        service: string | null;
+        duration: number;
+    } | null;
     setClient: (client: Partial<BookingState['client']>) => void;
     setVehicle: (vehicle: Partial<BookingState['vehicle']>) => void;
     setTechnician: (tech: Tecnico | null) => void;
     setService: (service: Service | null) => void;
     setDate: (date: Date | null) => void;
     setTimeSlot: (slot: string | null) => void;
+    setLastBooking: (booking: BookingState['lastBooking']) => void;
     reset: () => void;
 }
 
@@ -62,12 +69,15 @@ export const useBookingStore = create<BookingState>()(
             selectedTimeSlot: null,
             selectedService: null,
 
+            lastBooking: null,
+
             setClient: (client) => set((state) => ({ client: { ...state.client, ...client } })),
             setVehicle: (vehicle) => set((state) => ({ vehicle: { ...state.vehicle, ...vehicle } })),
             setTechnician: (tech) => set({ selectedTechnician: tech }),
             setService: (service) => set({ selectedService: service }),
             setDate: (date) => set({ selectedDate: date }),
             setTimeSlot: (slot) => set({ selectedTimeSlot: slot }),
+            setLastBooking: (booking) => set({ lastBooking: booking }),
             reset: () => set({
                 client: { nombre: '', apellidos: '', telefono: '', email: '', consentimiento: false },
                 vehicle: { matricula: '', marca: '', modelo: '', anio: '', motivo: '' },

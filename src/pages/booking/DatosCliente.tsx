@@ -80,9 +80,11 @@ export default function DatosCliente() {
             newErrors.telefono = 'Introduce un número de teléfono válido (9 dígitos)';
         }
 
-        // Email: strict format
+        // Email: mandatory and strict format
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (client.email && !emailRegex.test(client.email)) {
+        if (!client.email.trim()) {
+            newErrors.email = 'El email es obligatorio para recibir la confirmación';
+        } else if (!emailRegex.test(client.email)) {
             newErrors.email = 'Introduce un email válido';
         }
 
@@ -99,6 +101,16 @@ export default function DatosCliente() {
             navigate('/booking/vehiculo');
         }
     };
+
+    // Check if user is logged in to lock the email
+    const [isGoogleUser, setIsGoogleUser] = useState(false);
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user?.app_metadata?.provider === 'google' || user?.identities?.some(id => id.provider === 'google')) {
+                setIsGoogleUser(true);
+            }
+        });
+    }, []);
 
     return (
         <div className="flex flex-col h-full animate-fade-in">
@@ -132,14 +144,17 @@ export default function DatosCliente() {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400">Email (Opcional)</label>
+                    <label className="text-sm font-medium text-gray-400">Email *</label>
                     <input
                         type="email"
                         value={client.email}
-                        onChange={(e) => setClient({ email: e.target.value })}
-                        className="w-full bg-[var(--bg-card)] border border-white/10 rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                        readOnly={isGoogleUser}
+                        onChange={(e) => !isGoogleUser && setClient({ email: e.target.value })}
+                        className={`w-full bg-[var(--bg-card)] border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors ${isGoogleUser ? 'opacity-60 cursor-not-allowed' : ''}`}
                         placeholder="juan@email.com"
                     />
+                    {isGoogleUser && <p className="text-[var(--color-primary)] text-[10px] uppercase font-bold">Conectado con Google</p>}
+                    {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
                 </div>
 
                 <div className="pt-4">
