@@ -134,6 +134,24 @@ export default function Resumen() {
                 }
             }
 
+            // 5. Send Confirmation Email via Edge Function
+            try {
+                // Call the edge function using the supabase client for convenience (or direct fetch)
+                await supabase.functions.invoke('send-booking-confirmation', {
+                    body: {
+                        email: client.email,
+                        nombre: client.nombre,
+                        fecha_hora: format(startDate, 'dd/MM/yyyy HH:mm'),
+                        servicio: selectedService?.name,
+                        matricula: cleanPlate,
+                        tecnico: selectedTechnician?.nombre || 'Cualquier técnico'
+                    }
+                });
+            } catch (emailErr) {
+                console.error('Email Error:', emailErr);
+                // We don't throw here to not block the user if only the email fails
+            }
+
             // Success
             reset();
             navigate('/booking/confirmada');
