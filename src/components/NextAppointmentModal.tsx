@@ -179,17 +179,17 @@ export default function NextAppointmentModal({
                     </div>
 
                     {/* Lower Buttons */}
-                    <div className="flex flex-col items-center gap-6 pt-4 pb-4">
-                        <div className="flex gap-8">
+                    <div className="flex flex-col items-center gap-8 pt-4 pb-4">
+                        <div className="flex gap-12">
                             <button
                                 onClick={() => navigate('/booking/servicios')}
-                                className="text-yellow-500/80 hover:text-yellow-400 font-black transition-all uppercase tracking-[0.2em] text-[11px] border-b border-yellow-500/20 hover:border-yellow-400"
+                                className="text-yellow-500 hover:text-yellow-400 font-black transition-all uppercase tracking-[0.2em] text-sm border-b-2 border-yellow-500/20 hover:border-yellow-400 pb-1"
                             >
                                 {t.appointment_detail.change}
                             </button>
                             <button
                                 onClick={handleCancel}
-                                className="text-red-500/80 hover:text-red-400 font-black transition-all uppercase tracking-[0.2em] text-[11px] border-b border-red-500/20 hover:border-red-400"
+                                className="text-red-500 hover:text-red-400 font-black transition-all uppercase tracking-[0.2em] text-sm border-b-2 border-red-500/20 hover:border-red-400 pb-1"
                             >
                                 {t.appointment_detail.cancel}
                             </button>
@@ -197,7 +197,7 @@ export default function NextAppointmentModal({
 
                         <button
                             onClick={() => navigate('/booking/servicios')}
-                            className="w-full bg-gradient-to-r from-[var(--color-primary)] to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-black py-6 px-8 rounded-[1.5rem] text-lg uppercase tracking-[0.2em] transition-all transform hover:scale-[1.03] active:scale-95 shadow-[0_20px_40px_rgba(255,191,0,0.2)] mt-2"
+                            className="w-full bg-gradient-to-r from-[var(--color-primary)] to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-black py-8 px-10 rounded-[2rem] text-2xl uppercase tracking-[0.25em] transition-all transform hover:scale-[1.03] active:scale-95 shadow-[0_25px_50px_rgba(255,191,0,0.3)] mt-2"
                         >
                             {t.home.book_another}
                         </button>
