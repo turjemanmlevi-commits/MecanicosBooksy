@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore, ServiceType } from '../../store/bookingStore';
 import StepIndicator from '../../components/StepIndicator';
-import { ChevronLeft, Wrench, Calendar, Droplets, Clock, Disc, StopCircle, Zap, ClipboardCheck } from 'lucide-react';
+import { ChevronLeft, Wrench, Calendar, Droplets, Clock, Disc, StopCircle, Zap, ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Servicio } from '../../types/database';
 
@@ -14,16 +14,23 @@ export default function Servicios() {
 
     useEffect(() => {
         async function fetchServices() {
-            const { data, error } = await supabase
-                .from('servicios')
-                .select('*')
-                .eq('is_active', true)
-                .order('id');
+            try {
+                setLoading(true);
+                const { data, error } = await supabase
+                    .from('servicios')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('id');
 
-            if (!error && data) {
-                setServices(data);
+                if (error) throw error;
+                if (data) {
+                    setServices(data);
+                }
+            } catch (err: any) {
+                console.error('Error fetching services:', err);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }
         fetchServices();
     }, []);
@@ -74,7 +81,7 @@ export default function Servicios() {
                     </div>
                     <p className="font-medium">Cargando catálogo de servicios...</p>
                 </div>
-            ) : (
+            ) : services.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {services.map((service) => (
                         <button
@@ -126,6 +133,18 @@ export default function Servicios() {
                             </div>
                         </button>
                     ))}
+                </div>
+            ) : (
+                <div className="flex-1 flex flex-col items-center justify-center py-20 text-gray-400 bg-white/5 rounded-2xl border border-white/5 text-center px-6">
+                    <AlertTriangle className="w-12 h-12 mb-4 text-yellow-500" />
+                    <h3 className="text-xl font-bold text-white mb-2">No hay servicios disponibles</h3>
+                    <p className="text-sm max-w-xs">Actualmente no hay servicios activos en el catálogo. Por favor, contacta con nosotros.</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="mt-6 px-6 py-2 bg-[var(--color-primary)] text-black font-bold rounded-lg hover:scale-105 transition-transform"
+                    >
+                        Reintentar
+                    </button>
                 </div>
             )}
         </div>
