@@ -2,12 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { Check, Calendar, Home, Smartphone } from 'lucide-react';
 import { useBookingStore } from '../../store/bookingStore';
 import { addMinutes } from 'date-fns';
-import { useTranslation } from '../../hooks/useTranslation';
-
 export default function Confirmada() {
     const navigate = useNavigate();
     const { lastBooking, language } = useBookingStore();
-    const { t } = useTranslation();
 
     const formatGoogleDate = (date: Date) => {
         try {
