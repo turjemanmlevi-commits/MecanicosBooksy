@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Check, Calendar, Home, Smartphone } from 'lucide-react';
 import { useBookingStore } from '../../store/bookingStore';
-import { addMinutes, format } from 'date-fns';
+import { addMinutes } from 'date-fns';
 
 export default function Confirmada() {
     const navigate = useNavigate();
