@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { Tecnico } from '../types/database';
 
 export type ServiceType = 'cambio_aceite' | 'pedir_cita' | 'mantenimiento' | 'frenos' | 'bateria' | 'itv';
@@ -48,47 +47,42 @@ interface BookingState {
 }
 
 export const useBookingStore = create<BookingState>()(
-    persist(
-        (set) => ({
-            client: {
-                nombre: '',
-                apellidos: '',
-                telefono: '',
-                email: '',
-                consentimiento: false,
-            },
-            vehicle: {
-                matricula: '',
-                marca: '',
-                modelo: '',
-                anio: '',
-                motivo: '',
-            },
+    (set) => ({
+        client: {
+            nombre: '',
+            apellidos: '',
+            telefono: '',
+            email: '',
+            consentimiento: false,
+        },
+        vehicle: {
+            matricula: '',
+            marca: '',
+            modelo: '',
+            anio: '',
+            motivo: '',
+        },
+        selectedTechnician: null,
+        selectedDate: null,
+        selectedTimeSlot: null,
+        selectedService: null,
+
+        lastBooking: null,
+
+        setClient: (client) => set((state) => ({ client: { ...state.client, ...client } })),
+        setVehicle: (vehicle) => set((state) => ({ vehicle: { ...state.vehicle, ...vehicle } })),
+        setTechnician: (tech) => set({ selectedTechnician: tech }),
+        setService: (service) => set({ selectedService: service }),
+        setDate: (date) => set({ selectedDate: date }),
+        setTimeSlot: (slot) => set({ selectedTimeSlot: slot }),
+        setLastBooking: (booking) => set({ lastBooking: booking }),
+        reset: () => set({
+            client: { nombre: '', apellidos: '', telefono: '', email: '', consentimiento: false },
+            vehicle: { matricula: '', marca: '', modelo: '', anio: '', motivo: '' },
             selectedTechnician: null,
             selectedDate: null,
             selectedTimeSlot: null,
             selectedService: null,
-
-            lastBooking: null,
-
-            setClient: (client) => set((state) => ({ client: { ...state.client, ...client } })),
-            setVehicle: (vehicle) => set((state) => ({ vehicle: { ...state.vehicle, ...vehicle } })),
-            setTechnician: (tech) => set({ selectedTechnician: tech }),
-            setService: (service) => set({ selectedService: service }),
-            setDate: (date) => set({ selectedDate: date }),
-            setTimeSlot: (slot) => set({ selectedTimeSlot: slot }),
-            setLastBooking: (booking) => set({ lastBooking: booking }),
-            reset: () => set({
-                client: { nombre: '', apellidos: '', telefono: '', email: '', consentimiento: false },
-                vehicle: { matricula: '', marca: '', modelo: '', anio: '', motivo: '' },
-                selectedTechnician: null,
-                selectedDate: null,
-                selectedTimeSlot: null,
-                selectedService: null,
-            }),
         }),
-        {
-            name: 'motobox-booking-storage-v2', // Changed name to force fresh state
-        }
-    )
+    })
 );
