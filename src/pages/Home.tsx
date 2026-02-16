@@ -31,8 +31,8 @@ export default function Home() {
 
     return (
         <div className="flex flex-col min-h-screen relative">
-            <div className="absolute inset-0 bg-[url('/hero.jpg')] bg-cover bg-center bg-no-repeat">
-                <div className="absolute inset-0 bg-black/80"></div>
+            <div className="absolute inset-0 bg-[#0B0B0B] bg-[url('/hero.jpg')] bg-cover bg-center bg-no-repeat">
+                <div className="absolute inset-0 bg-black/60"></div>
             </div>
 
             <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-6 text-center pt-20 pb-10 gap-8">
