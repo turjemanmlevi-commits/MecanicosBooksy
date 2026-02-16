@@ -1,9 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Define the production URL and Key directly as constants
-// This ensures that even if Vite env variables fail to load, the app has a working connection
-const URL = 'https://pjwucakxqubrvbuzvidn.supabase.co';
-const KEY = 'sb_publishable__FgRx0gwyqc-YypwsuHNpA_Q9GqzwuF';
+// Switching to the project where Google Auth is already configured
+const URL = 'https://ogppbgxtjkrmbtuxizcy.supabase.co';
+const KEY = 'sb_publishable_zPF421AO_kGBFJkR28L8uA_ca1QB0EJ';
 
-// Create the client using hardcoded values (standard practice for public anon keys in Motobox)
 export const supabase = createClient(URL, KEY);
