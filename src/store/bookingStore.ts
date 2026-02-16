@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Tecnico } from '../types/database';
 
-export type ServiceType = 'cambio_aceite' | 'pedir_cita' | 'mantenimiento';
+export type ServiceType = 'cambio_aceite' | 'pedir_cita' | 'mantenimiento' | 'frenos' | 'bateria' | 'itv';
 
 interface Service {
     type: ServiceType;

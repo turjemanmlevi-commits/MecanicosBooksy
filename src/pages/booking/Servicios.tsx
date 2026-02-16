@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore, ServiceType } from '../../store/bookingStore';
 import StepIndicator from '../../components/StepIndicator';
-import { ChevronLeft, Wrench, Calendar, Droplets, Clock } from 'lucide-react';
+import { ChevronLeft, Wrench, Calendar, Droplets, Clock, Disc, StopCircle, Zap, ClipboardCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Servicio } from '../../types/database';
 
@@ -39,11 +39,16 @@ export default function Servicios() {
     };
 
     const getIcon = (type: string) => {
+        const baseClass = "w-12 h-12 mb-4 group-hover:scale-110 transition-transform";
         switch (type) {
-            case 'cambio_aceite': return <Droplets className="w-12 h-12 text-[var(--color-primary)] mb-4 group-hover:scale-110 transition-transform" />;
-            case 'pedir_cita': return <Calendar className="w-12 h-12 text-blue-400 mb-4 group-hover:scale-110 transition-transform" />;
-            case 'mantenimiento': return <Wrench className="w-12 h-12 text-green-400 mb-4 group-hover:scale-110 transition-transform" />;
-            default: return <Wrench className="w-12 h-12 text-gray-400 mb-4 group-hover:scale-110 transition-transform" />;
+            case 'cambio_aceite': return <Droplets className={`${baseClass} text-yellow-500`} />;
+            case 'pedir_cita': return <Calendar className={`${baseClass} text-blue-400`} />;
+            case 'mantenimiento': return <Wrench className={`${baseClass} text-green-400`} />;
+            case 'frenos': return <StopCircle className={`${baseClass} text-red-500`} />;
+            case 'bateria': return <Zap className={`${baseClass} text-blue-500`} />;
+            case 'itv': return <ClipboardCheck className={`${baseClass} text-purple-400`} />;
+            case 'neumaticos': return <Disc className={`${baseClass} text-gray-500`} />;
+            default: return <Wrench className={`${baseClass} text-gray-400`} />;
         }
     };
 

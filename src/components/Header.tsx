@@ -46,7 +46,7 @@ export default function Header() {
             <div className="flex justify-center w-1/3">
                 <img
                     src="/logo-amarillo-sinbisel-5.png"
-                    alt="MOTOR EXTREMO"
+                    alt="MOTOBOX"
                     className="h-10 cursor-pointer object-contain"
                     onClick={() => navigate('/')}
                 />
