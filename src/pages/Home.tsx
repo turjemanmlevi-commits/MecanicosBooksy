@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Clock, LogIn, ChevronRight, Sparkles } from 'lucide-react';
+import { MapPin, Clock, LogIn, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import PendingAppointmentsModal from '../components/PendingAppointmentsModal';
 import { useTranslation } from '../hooks/useTranslation';
@@ -74,16 +74,11 @@ export default function Home() {
                 provider: 'google',
                 options: {
                     redirectTo: `${window.location.origin}/`,
-                    queryParams: {
-                        access_type: 'offline',
-                        prompt: 'consent',
-                    },
                 }
             });
             if (error) throw error;
         } catch (error: any) {
             console.error('Error logging in:', error.message);
-            alert(t.common.error + ': ' + error.message);
             setIsLoggingIn(false);
         }
     };
@@ -97,7 +92,6 @@ export default function Home() {
         setCheckingAppointments(true);
         try {
             if (user) {
-                // Check if client exists
                 const { data: client } = await supabase
                     .from('clientes')
                     .select('id')
@@ -125,37 +119,11 @@ export default function Home() {
                     }
                 }
             }
-
             navigate('/booking/servicios');
         } catch (error) {
-            console.error("Error checking appointments:", error);
             navigate('/booking/servicios');
         } finally {
             setCheckingAppointments(false);
-        }
-    };
-
-    const handleCancelAppointment = async (id: string) => {
-        if (!confirm('¿Estás seguro?')) return;
-
-        try {
-            const { error } = await supabase
-                .from('citas')
-                .update({ estado: 'cancelada' })
-                .eq('id', id);
-
-            if (error) throw error;
-
-            setPendingAppointments(prev => prev.filter(p => p.id !== id));
-            if (pendingAppointments.length <= 1) {
-                setShowPendingModal(false);
-            }
-            if (nextAppointment?.id === id) {
-                setNextAppointment(null);
-            }
-        } catch (error) {
-            console.error("Error canceling appointment:", error);
-            alert(t.common.error);
         }
     };
 
@@ -166,84 +134,86 @@ export default function Home() {
                 onClose={() => setShowPendingModal(false)}
                 appointments={pendingAppointments}
                 onContinueBooking={() => navigate('/booking/servicios')}
-                onCancelAppointment={handleCancelAppointment}
+                onCancelAppointment={() => { }}
             />
 
-            <div className="absolute inset-0 bg-[#0B0B0B] bg-[url('/hero.jpg')] bg-cover bg-center bg-no-repeat">
-                <div className="absolute inset-0 bg-black/60"></div>
-            </div>
+            <div className="absolute inset-0 bg-[#0B0B0B] bg-[url('/hero.jpg')] bg-cover bg-center bg-no-repeat opacity-40"></div>
 
-            <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-6 text-center pt-20 pb-10 gap-8">
-                <div className="animate-fade-in">
-                    <h1 className="text-6xl font-bold mb-2 tracking-tighter leading-none">
-                        {t.home.title} <span className="text-[var(--color-primary)]">{t.home.subtitle}</span>
+            <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-6 text-center py-12 gap-12">
+                <div className="space-y-4 animate-fade-in mb-4">
+                    <img src="/logo-amarillo-sinbisel-5.png" alt="MOTOBOX" className="h-24 mx-auto mb-6 object-contain" />
+                    <h1 className="text-6xl font-black text-white tracking-widest uppercase mb-2">
+                        {t.home.title}
                     </h1>
-                    <p className="text-xl text-gray-400 tracking-widest uppercase">{t.home.motto}</p>
+                    <p className="text-xl text-[var(--color-primary)] font-bold tracking-[0.4em] uppercase">{t.home.motto}</p>
                 </div>
 
-                <div className="w-full max-w-sm flex flex-col gap-4">
+                <div className="w-full max-w-sm flex flex-col gap-6">
                     <button
                         onClick={handleBookClick}
                         disabled={checkingAppointments}
-                        className={`w-full ${nextAppointment ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]'} text-white font-bold py-5 px-8 rounded-xl text-xl uppercase tracking-wider transition-all transform hover:scale-105 shadow-lg shadow-black/40 disabled:opacity-70 disabled:cursor-wait flex items-center justify-center gap-2`}
+                        className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-black font-black py-6 px-8 rounded-2xl text-2xl uppercase tracking-widest transition-all transform hover:scale-105 active:scale-95 shadow-2xl shadow-yellow-500/20 disabled:opacity-70 flex items-center justify-center gap-2"
                     >
                         {checkingAppointments ? t.common.loading : (nextAppointment ? t.home.next_appointment : t.home.book)}
-                        {nextAppointment && <ChevronRight size={24} className={language === 'he' ? 'rotate-180' : ''} />}
+                        {!checkingAppointments && <ChevronRight size={28} className={language === 'he' ? 'rotate-180' : ''} />}
                     </button>
 
-                    {!nextAppointment && (
-                        <button
-                            onClick={() => navigate('/consultar')}
-                            className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-wider border-b border-gray-600 hover:border-white pb-1 self-center"
-                        >
-                            {t.home.check}
-                        </button>
-                    )}
-                </div>
-
-                {/* Promotional Banner Styled like the screenshot */}
-                <div className="w-full max-w-sm bg-cyan-100/10 border border-cyan-500/20 rounded-lg p-3 flex items-center justify-center gap-2 text-cyan-200 font-bold uppercase tracking-widest text-sm shadow-inner mt-4">
-                    <Sparkles size={16} />
-                    {language === 'he' ? 'אמנות התחזוקה' : language === 'en' ? 'The art of maintenance' : 'El arte del mantenimiento'}
-                </div>
-
-                <div className="w-full max-w-sm bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                    <a
-                        href="https://www.google.com/maps/search/?api=1&query=Av+de+los+Lirios+78+Las+Lagunas+de+Mijas"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-start gap-3 text-left mb-3 hover:bg-white/5 p-2 -m-2 rounded-lg transition-colors group"
+                    <button
+                        onClick={() => navigate('/consultar')}
+                        className="text-gray-400 hover:text-white transition-all text-sm font-bold uppercase tracking-widest border-b border-transparent hover:border-white pb-1 self-center"
                     >
-                        <MapPin className="text-[var(--color-primary)] shrink-0 mt-1 group-hover:scale-110 transition-transform" size={18} />
-                        <div className="ltr:text-left rtl:text-right">
-                            <p className="text-white font-medium text-sm group-hover:text-[var(--color-primary)] transition-colors">Av. de los Lirios, 78</p>
-                            <p className="text-gray-400 text-xs">29651 Las Lagunas de Mijas, Málaga</p>
-                        </div>
-                    </a>
-                    <div className="flex items-center gap-3 text-left p-2 -m-2 mb-3">
-                        <Clock className="text-[var(--color-primary)] shrink-0" size={18} />
-                        <div className="ltr:text-left rtl:text-right">
-                            <p className="text-white font-medium text-sm">{language === 'he' ? 'שני - שישי' : 'Lunes - Viernes'}</p>
-                            <p className="text-gray-400 text-xs">09:00 - 19:00</p>
-                        </div>
-                    </div>
+                        {t.home.check}
+                    </button>
+                </div>
 
-                    {!user && (
-                        <div className="border-t border-white/5 pt-3 mt-1">
-                            <button
-                                onClick={handleGoogleLogin}
-                                disabled={isLoggingIn}
-                                className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-200 font-bold py-3 px-4 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isLoggingIn ? (
-                                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <LogIn size={18} />
-                                )}
-                                {isLoggingIn ? t.home.connecting : t.home.login}
-                            </button>
+                <div className="w-full max-w-md grid grid-cols-1 gap-4 mt-8">
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl space-y-4 shadow-2xl">
+                        <a
+                            href="https://www.google.com/maps/search/?api=1&query=Av+de+los+Lirios+78+Las+Lagunas+de+Mijas"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-4 text-left p-3 hover:bg-white/5 rounded-2xl transition-all group"
+                        >
+                            <div className="w-10 h-10 bg-[var(--color-primary)]/10 rounded-xl flex items-center justify-center group-hover:bg-[var(--color-primary)] transition-colors">
+                                <MapPin className="text-[var(--color-primary)] group-hover:text-black transition-colors" size={20} />
+                            </div>
+                            <div>
+                                <p className="text-white font-bold text-sm">Av. de los Lirios, 78</p>
+                                <p className="text-gray-500 text-xs">Las Lagunas de Mijas, Málaga</p>
+                            </div>
+                        </a>
+
+                        <div className="flex items-center gap-4 text-left p-3">
+                            <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
+                                <Clock className="text-gray-400" size={20} />
+                            </div>
+                            <div>
+                                <p className="text-white font-bold text-sm">{language === 'he' ? 'שני - שישי' : 'Lunes - Viernes'}</p>
+                                <p className="text-gray-500 text-xs">09:00 - 19:00</p>
+                            </div>
                         </div>
-                    )}
+
+                        {!user && (
+                            <div className="pt-2">
+                                <button
+                                    onClick={handleGoogleLogin}
+                                    disabled={isLoggingIn}
+                                    className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-200 font-black py-4 px-6 rounded-2xl text-sm transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    {isLoggingIn ? (
+                                        <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <LogIn size={20} />
+                                    )}
+                                    {isLoggingIn ? t.home.connecting : t.home.login}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="mt-8 opacity-30">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">© 2026 MOTOBOX MIJAS</p>
                 </div>
             </div>
         </div>
