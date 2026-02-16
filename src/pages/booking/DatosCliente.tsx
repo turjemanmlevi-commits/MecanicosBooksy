@@ -4,11 +4,12 @@ import { useBookingStore } from '../../store/bookingStore';
 import StepIndicator from '../../components/StepIndicator';
 import { Clock, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export default function DatosCliente() {
     const navigate = useNavigate();
+    const { t, language } = useTranslation();
 
-    // Explicit selectors for better stability
     const client = useBookingStore(state => state.client);
     const setClient = useBookingStore(state => state.setClient);
 
@@ -25,10 +26,8 @@ export default function DatosCliente() {
                 if (user) {
                     setLoading(true);
 
-                    // Solo actualizamos si el campo está vacío
                     if (!client?.email) setClient({ email: user.email || '' });
 
-                    // 1. Google Sheets (opcional)
                     const sheetsUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
                     if (sheetsUrl && user.email) {
                         try {
@@ -43,7 +42,6 @@ export default function DatosCliente() {
                         } catch (e) { console.error(e); }
                     }
 
-                    // 2. Supabase DB
                     try {
                         const { data: dbClient } = await supabase
                             .from('clientes')
@@ -64,21 +62,21 @@ export default function DatosCliente() {
             }
         }
 
-        // Protegemos la ejecución
         try {
             fetchClientData();
         } catch (e) {
-            setRenderError("Error al cargar datos");
+            setRenderError(t.common.error);
         }
     }, []);
 
-    // Error boundary manual para evitar pantalla negra
     if (renderError) {
         return (
             <div className="flex flex-col items-center justify-center p-10 text-red-500 gap-4">
                 <AlertCircle size={48} />
                 <p>{renderError}</p>
-                <button onClick={() => window.location.reload()} className="bg-white text-black px-4 py-2 rounded">Reintentar</button>
+                <button onClick={() => window.location.reload()} className="bg-white text-black px-4 py-2 rounded">
+                    {language === 'he' ? 'נסה שוב' : language === 'en' ? 'Retry' : 'Reintentar'}
+                </button>
             </div>
         );
     }
@@ -87,28 +85,33 @@ export default function DatosCliente() {
         return (
             <div className="flex flex-col items-center justify-center p-20 text-gray-400 gap-4">
                 <Clock className="animate-spin text-[var(--color-primary)]" size={40} />
-                <p className="font-medium">Sincronizando perfil...</p>
+                <p className="font-medium">{language === 'he' ? 'מסנכרן פרופיל...' : language === 'en' ? 'Syncing profile...' : 'Sincronizando perfil...'}</p>
             </div>
         );
     }
 
-    // Safety check for client object
     if (!client) {
-        return <div className="p-10 text-center">Iniciando formulario...</div>;
+        return <div className="p-10 text-center">{t.common.loading}...</div>;
     }
 
     const validate = () => {
         const newErrors: Record<string, string> = {};
-        if (!client.nombre?.trim()) newErrors.nombre = 'Obligatorio';
-        else if (client.nombre.trim().split(' ').length < 2) newErrors.nombre = 'Nombre y apellidos';
+        if (!client.nombre?.trim()) {
+            newErrors.nombre = t.common.required;
+        } else if (client.nombre.trim().split(' ').length < 2) {
+            newErrors.nombre = language === 'he' ? 'שם ושם משפחה' : language === 'en' ? 'Full name required' : 'Nombre y apellidos';
+        }
 
         const phoneRegex = /^[6789]\d{8}$/;
         const cleanPhone = (client.telefono || '').replace(/\s/g, '');
-        if (!client.telefono?.trim()) newErrors.telefono = 'Obligatorio';
-        else if (!phoneRegex.test(cleanPhone)) newErrors.telefono = 'Teléfono inválido';
+        if (!client.telefono?.trim()) {
+            newErrors.telefono = t.common.required;
+        } else if (!phoneRegex.test(cleanPhone)) {
+            newErrors.telefono = language === 'he' ? 'מספר לא תקין' : language === 'en' ? 'Invalid phone' : 'Teléfono inválido';
+        }
 
-        if (!client.email?.trim()) newErrors.email = 'Obligatorio';
-        if (!client.consentimiento) newErrors.consentimiento = 'Debe aceptar';
+        if (!client.email?.trim()) newErrors.email = t.common.required;
+        if (!client.consentimiento) newErrors.consentimiento = language === 'he' ? 'חובה לאשר' : language === 'en' ? 'Must accept' : 'Debe aceptar';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -119,49 +122,49 @@ export default function DatosCliente() {
     };
 
     return (
-        <div className="flex flex-col h-full animate-fade-in pb-10">
+        <div className="flex flex-col h-full animate-fade-in pb-10" dir={language === 'he' ? 'rtl' : 'ltr'}>
             <StepIndicator currentStep={3} />
 
-            <h2 className="text-2xl font-bold mb-6">Tus Datos</h2>
+            <h2 className="text-2xl font-bold mb-6 text-white ltr:text-left rtl:text-right">{t.booking.client}</h2>
 
             <div className="flex-1 space-y-5">
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400">Nombre y Apellidos *</label>
+                <div className="space-y-2 ltr:text-left rtl:text-right">
+                    <label className="text-sm font-medium text-gray-400">{t.common.name} *</label>
                     <input
                         type="text"
                         value={client.nombre || ''}
                         onChange={(e) => setClient({ nombre: e.target.value })}
-                        className={`w-full bg-[var(--bg-card)] border ${errors.nombre ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors`}
-                        placeholder="Juan Pérez"
+                        className={`w-full bg-[var(--bg-card)] border ${errors.nombre ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors ltr:text-left rtl:text-right`}
+                        placeholder={language === 'he' ? 'ישראל ישראלי' : 'Juan Pérez'}
                     />
                     {errors.nombre && <p className="text-red-500 text-xs">{errors.nombre}</p>}
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400">Teléfono *</label>
+                <div className="space-y-2 ltr:text-left rtl:text-right">
+                    <label className="text-sm font-medium text-gray-400">{t.common.phone} *</label>
                     <input
                         type="tel"
                         value={client.telefono || ''}
                         onChange={(e) => setClient({ telefono: e.target.value })}
-                        className={`w-full bg-[var(--bg-card)] border ${errors.telefono ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors`}
+                        className={`w-full bg-[var(--bg-card)] border ${errors.telefono ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors ltr:text-left rtl:text-right`}
                         placeholder="600 000 000"
                     />
                     {errors.telefono && <p className="text-red-500 text-xs">{errors.telefono}</p>}
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400">Email *</label>
+                <div className="space-y-2 ltr:text-left rtl:text-right">
+                    <label className="text-sm font-medium text-gray-400">{t.common.email} *</label>
                     <input
                         type="email"
                         value={client.email || ''}
                         onChange={(e) => setClient({ email: e.target.value })}
-                        className={`w-full bg-[var(--bg-card)] border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors`}
+                        className={`w-full bg-[var(--bg-card)] border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors ltr:text-left rtl:text-right`}
                         placeholder="tu@email.com"
                     />
                     {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
                 </div>
 
-                <div className="space-y-4 pt-4">
+                <div className="space-y-4 pt-4 ltr:text-left rtl:text-right">
                     <label className="flex items-start gap-3 cursor-pointer group">
                         <div className={`w-5 h-5 rounded border flex items-center justify-center mt-1 transition-colors ${client.consentimiento ? 'bg-[var(--color-primary)] border-[var(--color-primary)]' : 'border-gray-500 group-hover:border-white'}`}>
                             {client.consentimiento && <div className="w-2 h-2 bg-white rounded-full" />}
@@ -173,7 +176,7 @@ export default function DatosCliente() {
                             className="hidden"
                         />
                         <span className={`text-sm ${errors.consentimiento ? 'text-red-500' : 'text-gray-400'}`}>
-                            Acepto la política de privacidad.
+                            {language === 'he' ? 'אני מאשר את מדיניות הפרטיות.' : language === 'en' ? 'I accept the privacy policy.' : 'Acepto la política de privacidad.'}
                         </span>
                     </label>
                 </div>
@@ -184,7 +187,7 @@ export default function DatosCliente() {
                     onClick={handleNext}
                     className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg active:scale-95 uppercase tracking-wider"
                 >
-                    Continuar
+                    {t.common.next}
                 </button>
             </div>
         </div>

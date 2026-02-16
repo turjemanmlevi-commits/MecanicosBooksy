@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, User } from 'lucide-react';
+import { ArrowLeft, User, Languages } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useBookingStore } from '../store/bookingStore';
 
 export default function Header() {
     const navigate = useNavigate();
     const location = useLocation();
     const [user, setUser] = useState<any>(null);
+    const language = useBookingStore(state => state.language);
+    const setLanguage = useBookingStore(state => state.setLanguage);
     const showBack = location.pathname !== '/';
 
     useEffect(() => {
@@ -25,14 +28,13 @@ export default function Header() {
         if (user) {
             navigate('/mi-perfil');
         } else {
-            // If on home, maybe scroll to login? For now just go to profile which redirects if no user
             navigate('/mi-perfil');
         }
     };
 
     return (
         <header className="sticky top-0 z-50 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b border-white/5 h-16 flex items-center justify-between px-4">
-            <div className="flex items-center w-1/3">
+            <div className="flex items-center w-1/4">
                 {showBack && (
                     <button
                         onClick={() => navigate(-1)}
@@ -43,7 +45,7 @@ export default function Header() {
                 )}
             </div>
 
-            <div className="flex justify-center w-1/3">
+            <div className="flex justify-center flex-1">
                 <img
                     src="/logo-amarillo-sinbisel-5.png"
                     alt="MOTOBOX"
@@ -52,7 +54,20 @@ export default function Header() {
                 />
             </div>
 
-            <div className="flex justify-end items-center gap-2 w-1/3">
+            <div className="flex justify-end items-center gap-3 w-1/3">
+                <div className="relative flex items-center bg-white/5 rounded-lg px-2 py-1 border border-white/10 group hover:border-white/20 transition-all">
+                    <Languages size={14} className="text-gray-400 group-hover:text-white transition-colors" />
+                    <select
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value as any)}
+                        className="bg-transparent text-white text-[10px] font-bold uppercase outline-none cursor-pointer appearance-none px-1 min-w-[30px] text-center"
+                    >
+                        <option value="es" className="bg-[#1A1A1A]">ES</option>
+                        <option value="en" className="bg-[#1A1A1A]">EN</option>
+                        <option value="he" className="bg-[#1A1A1A]">HE</option>
+                    </select>
+                </div>
+
                 <button
                     onClick={handleProfileClick}
                     className="flex items-center gap-2 group p-1"

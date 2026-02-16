@@ -5,22 +5,28 @@ import StepIndicator from '../../components/StepIndicator';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { addDays, format, startOfDay, parseISO, setHours, setMinutes, isBefore, addMinutes } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS, he } from 'date-fns/locale';
+import { useTranslation } from '../../hooks/useTranslation';
 
-// Configuration (could be fetched from DB)
 const START_HOUR = 9;
 const END_HOUR = 19;
 const SLOT_DURATION = 30;
 
+const dateLocales: Record<string, any> = {
+    es: es,
+    en: enUS,
+    he: he
+};
+
 export default function FechaHora() {
     const navigate = useNavigate();
     const { selectedTechnician, selectedService, setDate, setTimeSlot } = useBookingStore();
+    const { t, language } = useTranslation();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [appointments, setAppointments] = useState<any[]>([]);
-    const [techCount, setTechCount] = useState(3); // Default to 3
+    const [techCount, setTechCount] = useState(3);
     const [loading, setLoading] = useState(true);
 
-    // Generate next 5 days
     const daysToShow = useMemo(() => {
         return Array.from({ length: 5 }).map((_, i) => addDays(currentDate, i));
     }, [currentDate]);
@@ -32,7 +38,6 @@ export default function FechaHora() {
             const end = addDays(currentDate, 6).toISOString();
 
             try {
-                // Fetch active technicians count
                 const { data: techs, error: techError } = await supabase
                     .from('tecnicos')
                     .select('id')
@@ -41,10 +46,9 @@ export default function FechaHora() {
                 if (!techError && techs) {
                     setTechCount(techs.length);
                 } else {
-                    setTechCount(3); // Fallback to 3 if error or none found
+                    setTechCount(3);
                 }
 
-                // Fetch appointments
                 let query = supabase
                     .from('citas')
                     .select('fecha_hora_inicio, duracion, tecnico_id')
@@ -57,7 +61,6 @@ export default function FechaHora() {
                 }
 
                 const { data: appts, error: apptError } = await query;
-
                 if (!apptError && appts) setAppointments(appts);
             } catch (err) {
                 console.error('Error fetching data:', err);
@@ -70,17 +73,13 @@ export default function FechaHora() {
         fetchData();
     }, [currentDate, selectedTechnician]);
 
-    // Use service duration or default to 30
     const slotDuration = selectedService?.duration || SLOT_DURATION;
 
     const generateSlots = (day: Date) => {
-        // Skip weekends (0 = Sunday, 6 = Saturday)
         if (day.getDay() === 0 || day.getDay() === 6) return [];
-
         const slots = [];
         let currentTime = setMinutes(setHours(day, START_HOUR), 0);
         const endTime = setMinutes(setHours(day, END_HOUR), 0);
-
         while (isBefore(currentTime, endTime)) {
             slots.push(new Date(currentTime));
             currentTime = addMinutes(currentTime, slotDuration);
@@ -89,13 +88,8 @@ export default function FechaHora() {
     };
 
     const isSlotAvailable = (slot: Date) => {
-        // Check if slot is in the past
         if (isBefore(slot, new Date())) return false;
-
         const slotEnd = addMinutes(slot, slotDuration);
-
-        // Ensure we always have at least one slot available if no techs are defined
-        // or if data is still loading
         const activeTechCount = techCount > 0 ? techCount : 3;
 
         if (selectedTechnician) {
@@ -130,31 +124,33 @@ export default function FechaHora() {
     const nextWeek = () => setCurrentDate(addDays(currentDate, 5));
     const prevWeek = () => setCurrentDate(addDays(currentDate, -5));
 
+    const locale = dateLocales[language] || es;
+
     return (
-        <div className="flex flex-col h-full animate-fade-in pb-20"> {/* pb-20 for bottom space */}
+        <div className="flex flex-col h-full animate-fade-in pb-20" dir={language === 'he' ? 'rtl' : 'ltr'}>
             <StepIndicator currentStep={2} />
 
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 ltr:text-left rtl:text-right">
                 <div className="flex items-center gap-2">
-                    <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-gray-400 hover:text-white">
+                    <button onClick={() => navigate(-1)} className={`p-1 -ml-1 text-gray-400 hover:text-white ${language === 'he' ? 'rotate-180' : ''}`}>
                         <ChevronLeft />
                     </button>
-                    <h2 className="text-2xl font-bold">Fecha y Hora</h2>
+                    <h2 className="text-2xl font-bold text-white">{t.booking.time}</h2>
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={prevWeek} className="p-2 border border-white/10 rounded-lg hover:bg-white/10"><ChevronLeft size={20} /></button>
-                    <button onClick={nextWeek} className="p-2 border border-white/10 rounded-lg hover:bg-white/10"><ChevronRight size={20} /></button>
+                <div className="flex gap-2" dir="ltr"> {/* Navigation buttons always ltr for consistency? No, better handle based on lang */}
+                    <button onClick={prevWeek} className="p-2 border border-white/10 rounded-lg hover:bg-white/10 text-white"><ChevronLeft size={20} /></button>
+                    <button onClick={nextWeek} className="p-2 border border-white/10 rounded-lg hover:bg-white/10 text-white"><ChevronRight size={20} /></button>
                 </div>
             </div>
 
             <div className="flex-1 space-y-6 overflow-y-auto">
                 {loading ? (
-                    <div className="text-center py-10 text-gray-400"><Clock className="animate-spin mx-auto mb-2" /> Cargando disponibilidad...</div>
+                    <div className="text-center py-10 text-gray-400"><Clock className="animate-spin mx-auto mb-2" /> {language === 'he' ? 'בודק זמינות...' : language === 'en' ? 'Checking availability...' : 'Cargando disponibilidad...'}</div>
                 ) : (
                     daysToShow.map((day) => (
-                        <div key={day.toISOString()} className="bg-[var(--bg-card)] rounded-xl p-4 border border-white/5">
-                            <h3 className="text-lg font-bold capitalize mb-4 border-b border-white/5 pb-2">
-                                {format(day, 'EEEE d', { locale: es })}
+                        <div key={day.toISOString()} className="bg-[var(--bg-card)] rounded-xl p-4 border border-white/5 ltr:text-left rtl:text-right">
+                            <h3 className="text-lg font-bold capitalize mb-4 border-b border-white/5 pb-2 text-white">
+                                {format(day, 'EEEE d', { locale })}
                             </h3>
 
                             <div className="grid grid-cols-4 gap-3">

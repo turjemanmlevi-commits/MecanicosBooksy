@@ -29,6 +29,7 @@ interface BookingState {
     selectedDate: Date | null;
     selectedTimeSlot: string | null;
     selectedService: Service | null;
+    language: 'es' | 'en' | 'he';
 
     lastBooking: {
         date: string | null;
@@ -42,6 +43,7 @@ interface BookingState {
     setService: (service: Service | null) => void;
     setDate: (date: Date | null) => void;
     setTimeSlot: (slot: string | null) => void;
+    setLanguage: (lang: 'es' | 'en' | 'he') => void;
     setLastBooking: (booking: BookingState['lastBooking']) => void;
     reset: () => void;
 }
@@ -66,6 +68,7 @@ export const useBookingStore = create<BookingState>()(
         selectedDate: null,
         selectedTimeSlot: null,
         selectedService: null,
+        language: 'es',
 
         lastBooking: null,
 
@@ -75,6 +78,7 @@ export const useBookingStore = create<BookingState>()(
         setService: (service) => set({ selectedService: service }),
         setDate: (date) => set({ selectedDate: date }),
         setTimeSlot: (slot) => set({ selectedTimeSlot: slot }),
+        setLanguage: (lang) => set({ language: lang }),
         setLastBooking: (booking) => set({ lastBooking: booking }),
         reset: () => set({
             client: { nombre: '', apellidos: '', telefono: '', email: '', consentimiento: false },
@@ -83,6 +87,7 @@ export const useBookingStore = create<BookingState>()(
             selectedDate: null,
             selectedTimeSlot: null,
             selectedService: null,
+            language: 'es',
         }),
     })
 );

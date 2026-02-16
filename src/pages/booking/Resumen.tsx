@@ -5,10 +5,18 @@ import StepIndicator from '../../components/StepIndicator';
 import { ChevronLeft, AlertTriangle, Calendar, User, Car } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS, he } from 'date-fns/locale';
+import { useTranslation } from '../../hooks/useTranslation';
+
+const dateLocales: Record<string, any> = {
+    es: es,
+    en: enUS,
+    he: he
+};
 
 export default function Resumen() {
     const navigate = useNavigate();
+    const { t, language } = useTranslation();
     const {
         client,
         vehicle,
@@ -28,7 +36,6 @@ export default function Resumen() {
         setError(null);
 
         try {
-            // 1. Get or Create Client (Normalize phone first)
             const cleanPhone = client.telefono.replace(/\s/g, '');
             let clientId;
 
@@ -36,7 +43,7 @@ export default function Resumen() {
                 .from('clientes')
                 .select('id')
                 .eq('telefono', cleanPhone)
-                .single();
+                .maybeSingle();
 
             if (existingClient) {
                 clientId = existingClient.id;
@@ -60,14 +67,13 @@ export default function Resumen() {
                 clientId = newClient.id;
             }
 
-            // 2. Get or Create Vehicle (Normalize plate)
             const cleanPlate = vehicle.matricula.replace(/\s/g, '').toUpperCase();
             let vehicleId;
             const { data: existingVehicle } = await supabase
                 .from('vehiculos')
                 .select('id')
                 .eq('matricula', cleanPlate)
-                .single();
+                .maybeSingle();
 
             if (existingVehicle) {
                 vehicleId = existingVehicle.id;
@@ -95,7 +101,6 @@ export default function Resumen() {
                 vehicleId = newVehicle.id;
             }
 
-            // 3. Create Appointment
             const [hours, minutes] = selectedTimeSlot.split(':').map(Number);
             const startDate = new Date(selectedDate);
             startDate.setHours(hours, minutes, 0, 0);
@@ -113,13 +118,9 @@ export default function Resumen() {
 
             if (apptError) throw apptError;
 
-            // 4. Sync to Google Sheets
             const sheetsUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
-            if (!sheetsUrl) {
-                console.warn('VITE_GOOGLE_SHEETS_URL is not defined in environment variables');
-            } else {
+            if (sheetsUrl) {
                 try {
-                    // We AWAIT the fetch to ensure it's sent before navigating
                     await fetch(sheetsUrl, {
                         method: 'POST',
                         mode: 'no-cors',
@@ -143,9 +144,7 @@ export default function Resumen() {
                 }
             }
 
-            // 5. Send Confirmation Email via Edge Function
             try {
-                // Call the edge function using the supabase client for convenience (or direct fetch)
                 await supabase.functions.invoke('send-booking-confirmation', {
                     body: {
                         email: client.email,
@@ -159,10 +158,8 @@ export default function Resumen() {
                 });
             } catch (emailErr) {
                 console.error('Email Error:', emailErr);
-                // We don't throw here to not block the user if only the email fails
             }
 
-            // 6. Store booking data for the confirmation page before resetting
             setLastBooking({
                 date: selectedDate.toISOString(),
                 time: selectedTimeSlot,
@@ -170,96 +167,95 @@ export default function Resumen() {
                 duration: selectedService?.duration || 30
             });
 
-            // Success
             reset();
             navigate('/booking/confirmada');
 
         } catch (err: any) {
             console.error('Error booking:', err);
-            setError(err.message || 'Error al procesar la reserva.');
+            setError(err.message || t.common.error);
         } finally {
             setLoading(false);
         }
     };
 
     if (!client.nombre || !vehicle.matricula || !selectedDate) {
-        return <div className="p-4 text-center">Faltan datos. <button onClick={() => navigate('/')} className="underline">Volver al inicio</button></div>;
+        return <div className="p-4 text-center">{language === 'he' ? 'חסרים נתונים.' : language === 'en' ? 'Missing data.' : 'Faltan datos.'} <button onClick={() => navigate('/')} className="underline">{t.common.back}</button></div>;
     }
 
+    const locale = dateLocales[language] || es;
+
     return (
-        <div className="flex flex-col h-full animate-fade-in pb-20">
+        <div className="flex flex-col h-full animate-fade-in pb-20" dir={language === 'he' ? 'rtl' : 'ltr'}>
             <StepIndicator currentStep={5} totalSteps={5} />
 
-            <div className="flex items-center gap-2 mb-6">
-                <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-gray-400 hover:text-white">
+            <div className="flex items-center gap-2 mb-6 ltr:text-left rtl:text-right">
+                <button onClick={() => navigate(-1)} className={`p-1 -ml-1 text-gray-400 hover:text-white ${language === 'he' ? 'rotate-180' : ''}`}>
                     <ChevronLeft />
                 </button>
-                <h2 className="text-2xl font-bold">Resumen</h2>
+                <h2 className="text-2xl font-bold text-white">{t.booking.summary}</h2>
             </div>
 
             <div className="flex-1 space-y-4 overflow-y-auto">
-
-                {/* Date & Time Card */}
-                <div className="bg-[var(--bg-card)] rounded-xl p-6 border border-[var(--color-primary)]/50 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                <div className="bg-[var(--bg-card)] rounded-xl p-6 border border-[var(--color-primary)]/50 relative overflow-hidden ltr:text-left rtl:text-right">
+                    <div className={`absolute top-0 ${language === 'he' ? 'left-0' : 'right-0'} p-4 opacity-10`}>
                         <Calendar size={100} />
                     </div>
-                    <p className="text-sm text-[var(--color-primary)] font-bold uppercase trackin-wider mb-1">Fecha y Hora</p>
+                    <p className="text-sm text-[var(--color-primary)] font-bold uppercase tracking-wider mb-1">{t.booking.time}</p>
                     <h3 className="text-3xl font-bold text-white mb-2 capitalize">
-                        {selectedDate && format(selectedDate, 'EEEE d MMMM', { locale: es })}
+                        {selectedDate && format(selectedDate, 'EEEE d MMMM', { locale })}
                     </h3>
                     <div className="text-4xl font-bold text-white tracking-tighter">
                         {selectedTimeSlot}
                     </div>
                 </div>
 
-                {/* Details List */}
                 <div className="bg-[var(--bg-card)] rounded-xl p-4 border border-white/5 space-y-4">
-
-                    <div className="flex items-start gap-3 pb-4 border-b border-white/5">
+                    <div className="flex items-start gap-3 pb-4 border-b border-white/5 ltr:text-left rtl:text-right">
                         <User className="text-gray-400 mt-1" size={20} />
                         <div>
-                            <p className="text-xs text-gray-500 uppercase">Cliente</p>
+                            <p className="text-xs text-gray-500 uppercase">{language === 'he' ? 'לקוח' : language === 'en' ? 'Client' : 'Cliente'}</p>
                             <p className="font-medium text-white">{client.nombre}</p>
                             <p className="text-sm text-gray-400">{client.telefono}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-start gap-3 pb-4 border-b border-white/5">
+                    <div className="flex items-start gap-3 pb-4 border-b border-white/5 ltr:text-left rtl:text-right">
                         <Car className="text-gray-400 mt-1" size={20} />
                         <div>
-                            <p className="text-xs text-gray-500 uppercase">Vehículo</p>
+                            <p className="text-xs text-gray-500 uppercase">{language === 'he' ? 'רכב' : language === 'en' ? 'Vehicle' : 'Vehículo'}</p>
                             <p className="font-medium text-white">{vehicle.matricula}</p>
                             <p className="text-sm text-gray-400">{vehicle.marca} {vehicle.modelo}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-3 ltr:text-left rtl:text-right">
                         <User className="text-gray-400 mt-1" size={20} />
                         <div>
-                            <p className="text-xs text-gray-500 uppercase">Profesional</p>
+                            <p className="text-xs text-gray-500 uppercase">{language === 'he' ? 'טכנאי' : language === 'en' ? 'Technician' : 'Profesional'}</p>
                             <p className="font-medium text-white">
-                                {selectedTechnician ? selectedTechnician.nombre : 'Cualquier técnico disponible'}
+                                {selectedTechnician ? selectedTechnician.nombre : (language === 'he' ? 'כל טכנאי פנוי' : language === 'en' ? 'Any technician' : 'Cualquier técnico disponible')}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Service Info */}
-                <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                <div className="bg-white/5 rounded-xl p-4 border border-white/5 ltr:text-left rtl:text-right">
                     <p className="font-bold text-lg mb-1 uppercase text-[var(--color-primary)]">
                         {selectedService?.name || 'SERVICIO TALLER'}
                     </p>
                     <p className="text-sm text-gray-400">
-                        Duración estimada: {selectedService?.duration || 30} min
+                        {language === 'he' ? 'זמן משוער' : language === 'en' ? 'Estimated duration' : 'Duración estimada'}: {selectedService?.duration || 30} min
                     </p>
                 </div>
 
-                {/* Policy Warning */}
-                <div className="bg-yellow-500/10 rounded-xl p-4 border border-yellow-500/20 flex gap-3">
+                <div className="bg-yellow-500/10 rounded-xl p-4 border border-yellow-500/20 flex gap-3 ltr:text-left rtl:text-right">
                     <AlertTriangle className="text-yellow-500 shrink-0" size={20} />
                     <p className="text-xs text-yellow-200/80 leading-relaxed">
-                        IMPORTANTE: Acuda 10 minutos antes de su cita. Si no puede asistir, por favor cancele con antelación para liberar el hueco.
+                        {language === 'he'
+                            ? 'חשוב: נא להגיע 10 דקות לפני התור. אם אינך יכול להגיע, אנא בטל מראש כדי לפנות את המקום.'
+                            : language === 'en'
+                                ? 'IMPORTANT: Please arrive 10 minutes before your appointment. If you cannot attend, please cancel in advance to free up the slot.'
+                                : 'IMPORTANTE: Acuda 10 minutos antes de su cita. Si no puede asistir, por favor cancele con antelación para liberar el hueco.'}
                     </p>
                 </div>
 
@@ -268,16 +264,15 @@ export default function Resumen() {
                         {error}
                     </div>
                 )}
-
             </div>
 
             <div className="mt-4 pt-4">
                 <button
                     onClick={handleConfirm}
                     disabled={loading}
-                    className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-900/20 active:scale-95"
+                    className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95"
                 >
-                    {loading ? 'PROCESANDO...' : 'CONFIRMAR CITA'}
+                    {loading ? (language === 'he' ? 'מעבד...' : language === 'en' ? 'PROCESSING...' : 'PROCESANDO...') : (language === 'he' ? 'אישור תור' : language === 'en' ? 'CONFIRM BOOKING' : 'CONFIRMAR CITA')}
                 </button>
             </div>
         </div>
