@@ -149,6 +149,18 @@ export default function DatosCliente() {
                     {errors.telefono && <p className="text-red-500 text-xs">{errors.telefono}</p>}
                 </div>
 
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400">Email *</label>
+                    <input
+                        type="email"
+                        value={client.email || ''}
+                        onChange={(e) => setClient({ email: e.target.value })}
+                        className={`w-full bg-[var(--bg-card)] border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded-lg p-4 text-white focus:outline-none focus:border-[var(--color-primary)] transition-colors`}
+                        placeholder="tu@email.com"
+                    />
+                    {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+                </div>
+
                 <div className="space-y-4 pt-4">
                     <label className="flex items-start gap-3 cursor-pointer group">
                         <div className={`w-5 h-5 rounded border flex items-center justify-center mt-1 transition-colors ${client.consentimiento ? 'bg-[var(--color-primary)] border-[var(--color-primary)]' : 'border-gray-500 group-hover:border-white'}`}>
