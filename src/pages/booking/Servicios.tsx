@@ -42,7 +42,7 @@ export default function Servicios() {
             name: service.name,
             price: service.price || 'Consultar'
         });
-        navigate('/booking/fecha-hora');
+        navigate('/booking/profesional');
     };
 
     const getIcon = (type: string) => {
